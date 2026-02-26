@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Packify Pro v3</title>
+    <title>Packify Pro v4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -79,15 +79,15 @@
 
     <nav class="bg-white border-t border-slate-200 flex justify-around items-center h-[56px] pb-[env(safe-area-inset-bottom)] fixed bottom-0 w-full z-10">
         <button onclick="switchTab('kho')" id="tab-kho" class="relative flex flex-col items-center justify-center w-full h-full text-blue-500">
-            <div class="relative"><i class="fa-solid fa-box text-lg mb-0.5"></i><span id="badge-kho" class="absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-bold px-1.5 rounded-full">0</span></div>
+            <div class="relative"><i class="fa-solid fa-box text-lg mb-0.5"></i><span id="badge-kho" class="absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
             <span class="text-[10px] font-semibold">Kho Toàn Cầu</span>
         </button>
         <button onclick="switchTab('dangmua')" id="tab-dangmua" class="relative flex flex-col items-center justify-center w-full h-full text-slate-400">
-            <div class="relative"><i class="fa-solid fa-cart-shopping text-lg mb-0.5"></i><span id="badge-dangmua" class="absolute -top-1.5 -right-2 bg-orange-500 text-white text-[9px] font-bold px-1.5 rounded-full">0</span></div>
+            <div class="relative"><i class="fa-solid fa-cart-shopping text-lg mb-0.5"></i><span id="badge-dangmua" class="absolute -top-1.5 -right-2 bg-orange-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
             <span class="text-[10px] font-semibold">Đang Mua</span>
         </button>
         <button onclick="switchTab('vali')" id="tab-vali" class="relative flex flex-col items-center justify-center w-full h-full text-slate-400">
-            <div class="relative"><i class="fa-solid fa-suitcase-rolling text-lg mb-0.5"></i><span id="badge-vali" class="absolute -top-1.5 -right-2 bg-emerald-500 text-white text-[9px] font-bold px-1.5 rounded-full">0</span></div>
+            <div class="relative"><i class="fa-solid fa-suitcase-rolling text-lg mb-0.5"></i><span id="badge-vali" class="absolute -top-1.5 -right-2 bg-emerald-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
             <span class="text-[10px] font-semibold">Vali Của Tôi</span>
         </button>
     </nav>
@@ -96,7 +96,7 @@
         <div id="sidebarContent" class="w-[75%] max-w-[280px] bg-white h-full transform -translate-x-full sidebar-content flex flex-col" onclick="event.stopPropagation()">
             <div class="p-4 border-b border-slate-100 flex items-center gap-2">
                 <i class="fa-solid fa-tags text-blue-500 text-xl"></i>
-                <h2 class="text-xl font-bold text-slate-800">Danh Mục</h2>
+                <h2 class="text-xl font-bold text-slate-800">Danh Mục Lazada</h2>
             </div>
             <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5" id="sidebarTagList">
                 </div>
@@ -124,39 +124,39 @@
     </div>
 
     <script>
+        // Data mẫu test
         let items = [
-            { id: 1, name: "App Alipay & WeChat", qty: 1, price: 0, category: "Digital", tags: ["Tài chính"], aviation: "Xách tay", note: "Xác minh hộ chiếu và liên kết thẻ Visa trước khi bay.", status: "vali", warning: "Bắt buộc phải setup tại VN, sang TQ chặn mạng rất khó làm.", checked: false },
-            { id: 2, name: "Balo chống nước", qty: 1, price: 156000, category: "Hành lý", tags: ["Chung"], aviation: "Xách tay", note: "Để mang lap và giấy tờ quan trọng.", status: "kho", warning: "", checked: false }
+            { id: 1, name: "Visa X2 & JW202", qty: 1, price: 0, category: "Dành riêng cho bạn", aviation: "Bắt Buộc Xách Tay", note: "Bỏ túi đeo chéo trước ngực, tuyệt đối không cất sâu.", status: "vali", warning: "Mất là không thể nhập cảnh Trung Quốc!", checked: false },
+            { id: 2, name: "Sạc dự phòng", qty: 1, price: 350000, category: "Phụ Kiện Điện Tử", aviation: "Xách tay", note: "Nên mang loại 10000 - 20000mAh.", status: "kho", warning: "Tuyệt đối KHÔNG KÝ GỬI sạc dự phòng. Phải in rõ dung lượng trên vỏ.", checked: false }
         ];
         let currentTab = 'kho';
         let currentFilterTag = '';
 
-        // TỪ ĐIỂN THÔNG MINH SIÊU CẤP (Phân loại cực chuẩn)
+        // TỪ ĐIỂN CHUẨN LAZADA + LUẬT HẢI QUAN TRUNG QUỐC
         const autoDict = [
-            { keywords: ["hộ chiếu", "visa", "jw202", "dq", "giấy tờ", "căn cước", "ảnh thẻ", "hồ sơ", "admission"], category: "Giấy tờ", aviation: "Bắt Buộc Xách Tay", note: "Bỏ vào túi đeo chéo trước ngực, tuyệt đối không rời người.", warning: "QUAN TRỌNG: Mất là khỏi nhập học. CẤM KÝ GỬI!" },
-            { keywords: ["sạc dự phòng", "pin", "laptop", "ipad", "điện thoại", "tai nghe", "cáp", "củ sạc"], category: "Điện tử", aviation: "Bắt Buộc Xách Tay", note: "Đảm bảo sạc dự phòng có ghi rõ dung lượng (mAh).", warning: "CẤM KÝ GỬI sạc dự phòng và thiết bị có pin. Sẽ bị hải quan thu giữ!" },
-            { keywords: ["nước hoa", "sữa tắm", "dầu gội", "nước tẩy trang", "kem chống nắng", "chất lỏng", "skincare", "kem đánh răng"], category: "Mỹ phẩm", aviation: "Ký Gửi", note: "Bọc nilong thật chặt tránh tràn khi áp suất máy bay thay đổi.", warning: "Chai lọ > 100ml BẮT BUỘC KÝ GỬI. Xách tay sẽ bị vứt bỏ tại sân bay." },
-            { keywords: ["dao", "kéo", "dao cạo", "cắt móng tay", "vật nhọn", "tuốc nơ vít"], category: "Dụng cụ", aviation: "Ký Gửi", note: "Gói cẩn thận vào giữa vali ký gửi.", warning: "CẤM XÁCH TAY vật sắc nhọn." },
-            { keywords: ["mỳ tôm", "mì tôm", "phở gói", "hảo hảo", "bún", "miến"], category: "Thực phẩm", aviation: "Ký gửi / Xách tay", note: "Nên mang loại vị hải sản hoặc chay.", warning: "Tránh tuyệt đối mỳ có chữ/hình THỊT HEO, THỊT BÒ. Hải quan soi thấy sẽ tịch thu." },
-            { keywords: ["thịt heo", "xúc xích", "ruốc", "chà bông", "thịt bò", "khô gà", "trái cây tươi"], category: "Thực phẩm", aviation: "Cấm", note: "Không nên mang theo kẻo rước họa vào thân.", warning: "HẢI QUAN TRUNG QUỐC CẤM NHẬP CẢNH THỊT ĐỘNG VẬT. Phạt tiền rất nặng!" },
-            { keywords: ["thuốc", "đau bụng", "cảm", "kháng sinh", "băng gạc", "dạ dày", "tiêu hóa", "berberin"], category: "Y tế", aviation: "Ký Gửi", note: "Chia ra túi zip nhỏ, chụp lại vỏ thuốc.", warning: "" },
-            { keywords: ["quần", "áo", "tất", "giày", "váy", "đồ lót", "áo khoác", "len", "nón"], category: "Trang phục", aviation: "Ký Gửi", note: "Cuộn tròn đồ hoặc dùng túi hút chân không để tiết kiệm diện tích.", warning: "" },
-            { keywords: ["balo", "vali", "túi xách", "ví"], category: "Hành lý", aviation: "Xách tay / Ký gửi", note: "Gắn nametag ghi rõ Tên và SDT lên vali.", warning: "" },
-            { keywords: ["tiền", "nhân dân tệ", "usd", "thẻ visa", "mastercard"], category: "Tài chính", aviation: "Xách Tay", note: "Đổi trước một ít NDT lẻ để đi tàu/xe.", warning: "Không mang quá 5000 USD tiền mặt khi xuất cảnh VN." },
-            { keywords: ["tampermonkey", "code", "vpn", "clash", "v2ray", "wechat", "alipay"], category: "Digital", aviation: "Cài Đặt", note: "Setup và test kỹ kết nối VPN trước khi bay.", warning: "Sang TQ không có VPN là mất mạng quốc tế, không vào được FB/Google." }
+            { keywords: ["hộ chiếu", "visa", "jw202", "dq", "giấy báo", "admission", "tiền", "nhân dân tệ", "usd", "thẻ visa", "alipay", "wechat", "căn cước", "ảnh thẻ"], category: "Dành riêng cho bạn", aviation: "Bắt Buộc Xách Tay", note: "Luôn mang theo người để làm thủ tục hải quan.", warning: "CỰC KỲ QUAN TRỌNG: Tuyệt đối không để trong vali ký gửi!" },
+            { keywords: ["laptop", "điện thoại", "máy tính bảng", "ipad", "máy ảnh"], category: "Thiết Bị Điện Tử", aviation: "Bắt Buộc Xách Tay", note: "Sạc đầy pin trước khi bay để an ninh kiểm tra.", warning: "Các thiết bị có pin lớn không được ký gửi." },
+            { keywords: ["sạc dự phòng", "pin", "tai nghe", "cáp sạc", "củ sạc", "chuột", "bàn phím", "ổ cắm", "vpn", "tampermonkey"], category: "Phụ Kiện Điện Tử", aviation: "Xách tay (Pin/Sạc) - Ký gửi (Dây/Ổ cắm)", note: "VPN phải cài sẵn từ VN. Sạc dự phòng cầm tay.", warning: "Hàng không TQ CẤM KÝ GỬI sạc dự phòng. Dung lượng phải < 160Wh và in rõ trên vỏ." },
+            { keywords: ["nước hoa", "sữa tắm", "dầu gội", "nước tẩy trang", "kem chống nắng", "mỹ phẩm", "skincare", "kem đánh răng", "thuốc", "đau bụng", "cảm", "băng gạc", "dạ dày", "berberin"], category: "Sức Khỏe & Làm Đẹp", aviation: "Ký Gửi", note: "Bọc kín bằng túi zip hoặc băng keo nắp tránh tràn do áp suất.", warning: "CHẤT LỎNG > 100ml BẮT BUỘC KÝ GỬI. Xách tay sẽ bị an ninh soi chiếu vứt bỏ." },
+            { keywords: ["mỳ tôm", "mì tôm", "phở", "hảo hảo", "bún", "miến", "bánh kẹo", "cafe", "trà", "gia vị"], category: "Siêu Thị Tạp Hóa", aviation: "Ký Gửi", note: "Nên mang vị hải sản hoặc chay.", warning: "Tránh tuyệt đối mỳ có chữ/hình THỊT HEO, THỊT BÒ (Kể cả mỳ Hảo Hảo chua cay cũng có nguy cơ bị bắt bẻ)." },
+            { keywords: ["thịt heo", "xúc xích", "ruốc", "chà bông", "thịt bò", "khô gà", "trái cây tươi", "sữa tươi", "hạt giống"], category: "Siêu Thị Tạp Hóa", aviation: "CẤM NHẬP CẢNH", note: "Không mang theo kẻo rước họa vào thân.", warning: "HẢI QUAN TRUNG QUỐC CẤM TẠI CỬA KHẨU! Chó nghiệp vụ ngửi thấy sẽ bị tịch thu và phạt tiền." },
+            { keywords: ["dao", "kéo", "dao cạo", "cắt móng tay", "tuốc nơ vít", "băng dính", "cốc", "khăn", "bàn chải", "kim chỉ", "móc áo", "băng vệ sinh"], category: "Hàng Gia dụng & Đời sống", aviation: "Ký Gửi", note: "Xếp vào các góc trống của vali.", warning: "Vật sắc nhọn BẮT BUỘC KÝ GỬI. Cấm mang lên khoang hành khách." },
+            { keywords: ["quần", "áo", "tất", "giày", "váy", "đồ lót", "áo khoác", "len", "nón", "túi xách"], category: "Thời trang & Phụ kiện Nữ", aviation: "Ký Gửi", note: "Cuộn tròn đồ hoặc dùng túi hút chân không để tiết kiệm diện tích.", warning: "" },
+            { keywords: ["balo", "vali", "ổ khóa", "gối cổ", "bịt mắt"], category: "Thể Thao & Du Lịch", aviation: "Xách tay / Ký gửi", note: "Gắn nametag ghi rõ Tên, SĐT, Trường ĐH lên vali.", warning: "" },
+            { keywords: ["bật lửa", "diêm"], category: "Hàng Gia dụng & Đời sống", aviation: "CẤM BAY", note: "Bỏ lại ở nhà.", warning: "Quy định Hàng không Trung Quốc: Cấm mang bật lửa dưới mọi hình thức (kể cả xách tay hay ký gửi)." }
         ];
 
         function autoCategorize(name) {
             let lowerName = name.toLowerCase();
             for (let dict of autoDict) {
                 if (dict.keywords.some(kw => lowerName.includes(kw))) {
-                    return { category: dict.category, tags: ["Cá nhân"], aviation: dict.aviation, note: dict.note, warning: dict.warning };
+                    return { category: dict.category, aviation: dict.aviation, note: dict.note, warning: dict.warning };
                 }
             }
-            return { category: "Đồ dùng", tags: ["Chung"], aviation: "Chưa rõ", note: "Kiểm tra lại xem nên xách tay hay ký gửi.", warning: "" };
+            return { category: "Siêu Thị Tạp Hóa", aviation: "Kiểm tra lại", note: "Chưa rõ quy định, tự tìm hiểu xem xách tay hay ký gửi.", warning: "" };
         }
 
-        // Định dạng tiền tệ
+        // Format tiền có dấu phẩy
         function formatMoney(amount) {
             return new Intl.NumberFormat('en-US').format(amount);
         }
@@ -174,19 +174,18 @@
             });
             document.getElementById('priceBar').style.display = (tab === 'dangmua' || tab === 'vali') ? 'flex' : 'none';
             document.getElementById('selectAllCheckbox').checked = false;
-            items.forEach(i => i.checked = false); // Reset tick khi chuyển tab
+            items.forEach(i => i.checked = false);
             renderItems();
         }
 
-        // Checkbox Logic & Cảnh báo đỏ
+        // Logic Checkbox & CẢNH BÁO ĐỎ
         function toggleCheckbox(id) {
             let item = items.find(i => i.id === id);
             if (item) {
                 item.checked = !item.checked;
-                
-                // NẾU VỪA TICK MÀ CÓ CẢNH BÁO -> BÁO ĐỎ LÊN
+                // Popup đỏ khi tick đồ nguy hiểm
                 if (item.checked && item.warning) {
-                    alert("🚨 CẢNH BÁO HÀNG KHÔNG/HẢI QUAN:\n\n" + item.warning);
+                    alert("🚨 QUY ĐỊNH BAY / HẢI QUAN TQ:\n\n" + item.warning);
                 }
             }
             renderItems();
@@ -202,13 +201,19 @@
             let selected = items.filter(i => i.status === currentTab && i.checked);
             if (selected.length === 0) return;
             
+            // XÓA THẲNG KHÔNG HỎI
             if(action === 'delete') {
-                if(!confirm(`Xóa ${selected.length} món đồ này vĩnh viễn?`)) return;
                 items = items.filter(i => !(i.status === currentTab && i.checked));
             } else {
                 selected.forEach(i => { i.status = action; i.checked = false; });
             }
             document.getElementById('selectAllCheckbox').checked = false;
+            renderItems();
+        }
+
+        // Xóa lẻ từng cái cũng KHÔNG HỎI
+        function deleteItem(id) {
+            items = items.filter(i => i.id !== id);
             renderItems();
         }
 
@@ -219,9 +224,8 @@
             
             let filteredItems = items.filter(i => i.status === currentTab);
             if(searchText) filteredItems = filteredItems.filter(i => i.name.toLowerCase().includes(searchText.toLowerCase()));
-            if(currentFilterTag) filteredItems = filteredItems.filter(i => i.category === currentFilterTag || i.tags.includes(currentFilterTag));
+            if(currentFilterTag) filteredItems = filteredItems.filter(i => i.category === currentFilterTag);
 
-            // Tính toán Badges & Tiền
             document.getElementById('badge-kho').innerText = items.filter(i => i.status === 'kho').length;
             document.getElementById('badge-dangmua').innerText = items.filter(i => i.status === 'dangmua').length;
             document.getElementById('badge-vali').innerText = items.filter(i => i.status === 'vali').length;
@@ -232,24 +236,18 @@
             let checkedCount = filteredItems.filter(i => i.checked).length;
             document.getElementById('selectedCount').innerText = checkedCount;
             
-            // Hiện/Ẩn nút Batch Actions
-            if(checkedCount > 0) {
-                document.getElementById('batchActions').classList.replace('hidden', 'flex');
-            } else {
-                document.getElementById('batchActions').classList.replace('flex', 'hidden');
-            }
+            if(checkedCount > 0) document.getElementById('batchActions').classList.replace('hidden', 'flex');
+            else document.getElementById('batchActions').classList.replace('flex', 'hidden');
 
             filteredItems.forEach(item => {
                 let textClass = (item.checked && currentTab === 'vali') ? 'line-through-custom' : 'text-slate-800';
                 let warningHtml = item.warning ? `<div class="mt-2 text-[11px] text-red-600 bg-red-50 p-2 rounded-lg font-medium leading-snug"><i class="fa-solid fa-triangle-exclamation mr-1"></i>${item.warning}</div>` : '';
 
-                // Màu sắc Tag hàng không
                 let aviaColor = "bg-slate-100 text-slate-600";
                 if(item.aviation.includes("Xách Tay") || item.aviation.includes("Xách tay")) aviaColor = "bg-blue-100 text-blue-700";
                 if(item.aviation.includes("Ký Gửi") || item.aviation.includes("Ký gửi")) aviaColor = "bg-emerald-100 text-emerald-700";
-                if(item.aviation.includes("Cấm")) aviaColor = "bg-red-100 text-red-700";
+                if(item.aviation.includes("CẤM")) aviaColor = "bg-red-100 text-red-700";
 
-                // Nút thao tác (Không bị trượt ra ngoài nữa)
                 let actionBtns = '';
                 if (currentTab === 'kho') {
                     actionBtns = `
@@ -285,7 +283,6 @@
                             </div>
 
                             <div class="border-t border-dashed border-slate-200 my-2"></div>
-
                             <div class="flex items-center gap-1">
                                 <i class="fa-solid fa-plane-departure text-[10px] text-slate-400"></i>
                                 <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded ${aviaColor}">${item.aviation}</span>
@@ -304,11 +301,10 @@
             updateSidebarTags();
         }
 
-        // Add Logic
         function addItem() {
             let name = document.getElementById('itemName').value.trim();
             let qty = document.getElementById('itemQty').value || 1;
-            let priceStr = document.getElementById('itemPrice').value.replace(/,/g, ''); // Bỏ dấu phẩy để tính toán
+            let priceStr = document.getElementById('itemPrice').value.replace(/,/g, '');
             let price = priceStr ? Number(priceStr) : 0;
             
             if(!name) return;
@@ -321,7 +317,6 @@
                 qty: Number(qty),
                 price: price,
                 category: autoData.category,
-                tags: autoData.tags,
                 aviation: autoData.aviation,
                 note: autoData.note,
                 status: 'kho',
@@ -340,21 +335,14 @@
             if(item) { item.status = newStatus; item.checked = false; renderItems(); }
         }
 
-        function deleteItem(id) {
-            if(confirm("Xóa món này khỏi hệ thống?")) {
-                items = items.filter(i => i.id !== id);
-                renderItems();
-            }
-        }
-
-        // Sidebar Update (Bỏ dấu #)
         function updateSidebarTags() {
             const listEl = document.getElementById('sidebarTagList');
-            let allCategories = new Set(items.map(i => i.category));
+            // List các danh mục Lazada chuẩn
+            const lazadaCats = ["Dành riêng cho bạn", "Thiết Bị Điện Tử", "Phụ Kiện Điện Tử", "Sức Khỏe & Làm Đẹp", "Siêu Thị Tạp Hóa", "Hàng Gia dụng & Đời sống", "Thời trang & Phụ kiện Nữ", "Thời trang & Phụ kiện Nam", "Thể Thao & Du Lịch"];
             
-            listEl.innerHTML = `<button onclick="filterByTag('')" class="text-left px-3 py-2.5 rounded-lg ${currentFilterTag === '' ? 'bg-blue-50 text-blue-600 font-bold' : 'bg-slate-50 text-slate-700 font-medium'} text-sm">Tất cả danh mục</button>`;
+            listEl.innerHTML = `<button onclick="filterByTag('')" class="text-left px-3 py-2.5 rounded-lg ${currentFilterTag === '' ? 'bg-blue-50 text-blue-600 font-bold' : 'bg-slate-50 text-slate-700 font-medium'} text-sm">Hiển thị tất cả</button>`;
             
-            [...allCategories].sort().forEach(tag => {
+            lazadaCats.forEach(tag => {
                 let activeClass = currentFilterTag === tag ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-600 hover:bg-slate-50';
                 listEl.innerHTML += `<button onclick="filterByTag('${tag}')" class="text-left px-3 py-2.5 rounded-lg text-sm font-medium ${activeClass}">${tag}</button>`;
             });
@@ -362,7 +350,6 @@
 
         function filterByTag(tag) { currentFilterTag = tag; toggleSidebar(); renderItems(); }
 
-        // Toggles
         const modal = document.getElementById('addModal');
         function toggleAddModal() { modal.classList.toggle('hidden'); }
         
