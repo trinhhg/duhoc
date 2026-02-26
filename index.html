@@ -3,39 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Packify Pro v4</title>
+    <title>Packify Pro v5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --tg-bg: #f3f4f6; --tg-card: #ffffff; --tg-blue: #3b82f6; }
         body {
-            background-color: var(--tg-bg);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
+            background-color: var(--tg-bg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent; height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
         }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
-        
-        .tg-card {
-            background-color: var(--tg-card); border-radius: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: transform 0.1s;
-        }
-        
+        .tg-card { background-color: var(--tg-card); border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .custom-checkbox {
             appearance: none; width: 22px; height: 22px; min-width: 22px;
-            border: 2px solid #cbd5e1; border-radius: 6px;
-            outline: none; cursor: pointer; position: relative; transition: 0.2s;
+            border: 2px solid #cbd5e1; border-radius: 6px; outline: none; cursor: pointer; position: relative; transition: 0.2s;
         }
         .custom-checkbox:checked { background-color: var(--tg-blue); border-color: var(--tg-blue); }
         .custom-checkbox:checked::after {
             content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
-            color: white; font-size: 12px;
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: white; font-size: 12px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         }
-
         .line-through-custom { text-decoration: line-through; color: #9ca3af; }
-        .sidebar-overlay { transition: opacity 0.3s ease; }
         .sidebar-content { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* Ẩn mũi tên mặc định của input number */
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body class="text-slate-800">
@@ -69,11 +62,10 @@
     </div>
 
     <main class="flex-1 overflow-y-auto p-3 pb-24" id="mainContent">
-        <div id="itemList" class="flex flex-col gap-3">
-            </div>
+        <div id="itemList" class="flex flex-col gap-3"></div>
     </main>
 
-    <button onclick="toggleAddModal()" class="fixed bottom-[72px] right-4 w-14 h-14 bg-blue-500 text-white rounded-full shadow-lg shadow-blue-500/40 flex items-center justify-center text-2xl hover:bg-blue-600 active:scale-95 transition-all z-20">
+    <button onclick="openAddModal()" class="fixed bottom-[72px] right-4 w-14 h-14 bg-blue-500 text-white rounded-full shadow-lg shadow-blue-500/40 flex items-center justify-center text-2xl hover:bg-blue-600 active:scale-95 transition-all z-20">
         <i class="fa-solid fa-plus"></i>
     </button>
 
@@ -92,58 +84,73 @@
         </button>
     </nav>
 
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-50 hidden sidebar-overlay" onclick="toggleSidebar()">
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-50 hidden" onclick="toggleSidebar()">
         <div id="sidebarContent" class="w-[75%] max-w-[280px] bg-white h-full transform -translate-x-full sidebar-content flex flex-col" onclick="event.stopPropagation()">
             <div class="p-4 border-b border-slate-100 flex items-center gap-2">
-                <i class="fa-solid fa-tags text-blue-500 text-xl"></i>
-                <h2 class="text-xl font-bold text-slate-800">Danh Mục Lazada</h2>
+                <i class="fa-solid fa-tags text-blue-500 text-xl"></i><h2 class="text-xl font-bold text-slate-800">Danh Mục Lazada</h2>
             </div>
-            <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5" id="sidebarTagList">
-                </div>
+            <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5" id="sidebarTagList"></div>
         </div>
     </div>
 
     <div id="addModal" class="fixed inset-0 bg-black/50 z-50 hidden flex justify-center items-center px-4">
         <div class="bg-white w-full max-w-sm rounded-2xl p-5 shadow-xl" id="modalContent">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold">Thêm đồ mới</h3>
-                <button onclick="toggleAddModal()" class="text-slate-400 hover:text-red-500 text-xl"><i class="fa-solid fa-xmark"></i></button>
+                <h3 class="text-lg font-bold" id="modalTitle">Thêm đồ mới</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 text-xl"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <input type="text" id="itemName" placeholder="Tên món đồ..." class="w-full bg-slate-100 rounded-xl p-3 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+            
+            <input type="text" id="itemName" placeholder="Tên món đồ..." class="w-full bg-slate-100 rounded-xl p-3 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 font-medium">
+            
             <div class="flex gap-2 mb-4">
-                <input type="number" id="itemQty" placeholder="SL" value="1" class="w-1/4 bg-slate-100 rounded-xl p-3 text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-                <div class="relative w-3/4">
-                    <input type="text" id="itemPrice" placeholder="Giá tiền (Tùy chọn)" oninput="formatPriceInput(event)" class="w-full bg-slate-100 rounded-xl p-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-right">
-                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 font-bold">đ</span>
+                <div class="flex items-center justify-between bg-slate-100 rounded-xl px-1 w-[110px] shrink-0 border border-slate-200">
+                    <button type="button" onclick="adjustQty(-1)" class="w-8 h-10 text-slate-500 font-bold text-xl active:text-blue-500">-</button>
+                    <input type="number" id="itemQty" value="1" class="w-8 text-center bg-transparent focus:outline-none text-sm font-bold p-0" readonly>
+                    <button type="button" onclick="adjustQty(1)" class="w-8 h-10 text-slate-500 font-bold text-lg active:text-blue-500">+</button>
+                </div>
+                
+                <div class="relative flex-1">
+                    <input type="text" id="itemPrice" placeholder="Giá 1 món (Tùy chọn)" oninput="formatPriceInput(event)" class="w-full bg-slate-100 rounded-xl p-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-right font-bold border border-slate-200">
+                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 font-bold text-sm">đ</span>
                 </div>
             </div>
-            <button onclick="addItem()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl hover:bg-blue-600 active:scale-95 transition-transform">
+            
+            <button id="submitBtn" onclick="saveItem()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl hover:bg-blue-600 active:scale-95 transition-transform">
                 Thêm vào kho
             </button>
         </div>
     </div>
 
     <script>
-        // Data mẫu test
-        let items = [
+        // LOAD DỮ LIỆU TỪ LOCAL STORAGE HOẶC DÙNG MẶC ĐỊNH
+        let items = JSON.parse(localStorage.getItem('packify_data')) || [
             { id: 1, name: "Visa X2 & JW202", qty: 1, price: 0, category: "Dành riêng cho bạn", aviation: "Bắt Buộc Xách Tay", note: "Bỏ túi đeo chéo trước ngực, tuyệt đối không cất sâu.", status: "vali", warning: "Mất là không thể nhập cảnh Trung Quốc!", checked: false },
-            { id: 2, name: "Sạc dự phòng", qty: 1, price: 350000, category: "Phụ Kiện Điện Tử", aviation: "Xách tay", note: "Nên mang loại 10000 - 20000mAh.", status: "kho", warning: "Tuyệt đối KHÔNG KÝ GỬI sạc dự phòng. Phải in rõ dung lượng trên vỏ.", checked: false }
+            { id: 2, name: "Sạc dự phòng", qty: 1, price: 350000, category: "Phụ Kiện Điện Tử", aviation: "Xách tay", note: "Nên mang loại 10000 - 20000mAh.", status: "kho", warning: "Tuyệt đối KHÔNG KÝ GỬI sạc dự phòng.", checked: false }
         ];
+        
+        // HÀM LƯU VÀO TRÌNH DUYỆT (F5 KHÔNG MẤT)
+        function saveToStorage() {
+            localStorage.setItem('packify_data', JSON.stringify(items));
+        }
+
         let currentTab = 'kho';
         let currentFilterTag = '';
+        let editingId = null;
 
-        // TỪ ĐIỂN CHUẨN LAZADA + LUẬT HẢI QUAN TRUNG QUỐC
+        // TỪ ĐIỂN ĐÃ FIX LỖI "KHĂN" & "DÉP"
         const autoDict = [
-            { keywords: ["hộ chiếu", "visa", "jw202", "dq", "giấy báo", "admission", "tiền", "nhân dân tệ", "usd", "thẻ visa", "alipay", "wechat", "căn cước", "ảnh thẻ"], category: "Dành riêng cho bạn", aviation: "Bắt Buộc Xách Tay", note: "Luôn mang theo người để làm thủ tục hải quan.", warning: "CỰC KỲ QUAN TRỌNG: Tuyệt đối không để trong vali ký gửi!" },
-            { keywords: ["laptop", "điện thoại", "máy tính bảng", "ipad", "máy ảnh"], category: "Thiết Bị Điện Tử", aviation: "Bắt Buộc Xách Tay", note: "Sạc đầy pin trước khi bay để an ninh kiểm tra.", warning: "Các thiết bị có pin lớn không được ký gửi." },
-            { keywords: ["sạc dự phòng", "pin", "tai nghe", "cáp sạc", "củ sạc", "chuột", "bàn phím", "ổ cắm", "vpn", "tampermonkey"], category: "Phụ Kiện Điện Tử", aviation: "Xách tay (Pin/Sạc) - Ký gửi (Dây/Ổ cắm)", note: "VPN phải cài sẵn từ VN. Sạc dự phòng cầm tay.", warning: "Hàng không TQ CẤM KÝ GỬI sạc dự phòng. Dung lượng phải < 160Wh và in rõ trên vỏ." },
-            { keywords: ["nước hoa", "sữa tắm", "dầu gội", "nước tẩy trang", "kem chống nắng", "mỹ phẩm", "skincare", "kem đánh răng", "thuốc", "đau bụng", "cảm", "băng gạc", "dạ dày", "berberin"], category: "Sức Khỏe & Làm Đẹp", aviation: "Ký Gửi", note: "Bọc kín bằng túi zip hoặc băng keo nắp tránh tràn do áp suất.", warning: "CHẤT LỎNG > 100ml BẮT BUỘC KÝ GỬI. Xách tay sẽ bị an ninh soi chiếu vứt bỏ." },
-            { keywords: ["mỳ tôm", "mì tôm", "phở", "hảo hảo", "bún", "miến", "bánh kẹo", "cafe", "trà", "gia vị"], category: "Siêu Thị Tạp Hóa", aviation: "Ký Gửi", note: "Nên mang vị hải sản hoặc chay.", warning: "Tránh tuyệt đối mỳ có chữ/hình THỊT HEO, THỊT BÒ (Kể cả mỳ Hảo Hảo chua cay cũng có nguy cơ bị bắt bẻ)." },
-            { keywords: ["thịt heo", "xúc xích", "ruốc", "chà bông", "thịt bò", "khô gà", "trái cây tươi", "sữa tươi", "hạt giống"], category: "Siêu Thị Tạp Hóa", aviation: "CẤM NHẬP CẢNH", note: "Không mang theo kẻo rước họa vào thân.", warning: "HẢI QUAN TRUNG QUỐC CẤM TẠI CỬA KHẨU! Chó nghiệp vụ ngửi thấy sẽ bị tịch thu và phạt tiền." },
-            { keywords: ["dao", "kéo", "dao cạo", "cắt móng tay", "tuốc nơ vít", "băng dính", "cốc", "khăn", "bàn chải", "kim chỉ", "móc áo", "băng vệ sinh"], category: "Hàng Gia dụng & Đời sống", aviation: "Ký Gửi", note: "Xếp vào các góc trống của vali.", warning: "Vật sắc nhọn BẮT BUỘC KÝ GỬI. Cấm mang lên khoang hành khách." },
-            { keywords: ["quần", "áo", "tất", "giày", "váy", "đồ lót", "áo khoác", "len", "nón", "túi xách"], category: "Thời trang & Phụ kiện Nữ", aviation: "Ký Gửi", note: "Cuộn tròn đồ hoặc dùng túi hút chân không để tiết kiệm diện tích.", warning: "" },
-            { keywords: ["balo", "vali", "ổ khóa", "gối cổ", "bịt mắt"], category: "Thể Thao & Du Lịch", aviation: "Xách tay / Ký gửi", note: "Gắn nametag ghi rõ Tên, SĐT, Trường ĐH lên vali.", warning: "" },
-            { keywords: ["bật lửa", "diêm"], category: "Hàng Gia dụng & Đời sống", aviation: "CẤM BAY", note: "Bỏ lại ở nhà.", warning: "Quy định Hàng không Trung Quốc: Cấm mang bật lửa dưới mọi hình thức (kể cả xách tay hay ký gửi)." }
+            { keywords: ["hộ chiếu", "visa", "jw202", "dq", "giấy báo", "tiền", "thẻ visa", "alipay", "wechat", "căn cước", "ảnh thẻ"], category: "Dành riêng cho bạn", aviation: "Bắt Buộc Xách Tay", note: "Luôn mang theo người.", warning: "CỰC KỲ QUAN TRỌNG: Tuyệt đối không để trong vali ký gửi!" },
+            { keywords: ["laptop", "điện thoại", "ipad", "máy ảnh"], category: "Thiết Bị Điện Tử", aviation: "Bắt Buộc Xách Tay", note: "Sạc đầy pin trước khi bay.", warning: "Cấm ký gửi thiết bị có pin dung lượng lớn." },
+            { keywords: ["sạc dự phòng", "pin", "tai nghe", "cáp", "củ sạc", "chuột", "vpn", "tampermonkey"], category: "Phụ Kiện Điện Tử", aviation: "Xách tay (Pin) - Ký gửi (Dây)", note: "Sạc dự phòng cầm tay.", warning: "Hàng không TQ CẤM KÝ GỬI sạc dự phòng." },
+            { keywords: ["nước hoa", "sữa tắm", "dầu gội", "tẩy trang", "kem chống nắng", "mỹ phẩm", "kem đánh răng", "thuốc", "đau bụng", "cảm", "băng gạc", "dạ dày"], category: "Sức Khỏe & Làm Đẹp", aviation: "Ký Gửi", note: "Bọc kín túi zip tránh tràn.", warning: "CHẤT LỎNG > 100ml BẮT BUỘC KÝ GỬI." },
+            { keywords: ["mỳ tôm", "phở", "hảo hảo", "bún", "bánh kẹo", "cafe", "trà"], category: "Siêu Thị Tạp Hóa", aviation: "Ký Gửi", note: "Nên mang vị hải sản/chay.", warning: "Tránh tuyệt đối mỳ có chữ/hình THỊT HEO, THỊT BÒ." },
+            { keywords: ["thịt heo", "xúc xích", "ruốc", "chà bông", "thịt bò", "khô gà", "trái cây", "hạt giống"], category: "Siêu Thị Tạp Hóa", aviation: "CẤM NHẬP CẢNH", note: "Không mang theo.", warning: "HẢI QUAN TRUNG QUỐC CẤM TẠI CỬA KHẨU! Phạt tiền rất nặng." },
+            // VẬT SẮC NHỌN ĐÃ ĐƯỢC TÁCH RIÊNG
+            { keywords: ["dao", "kéo", "dao cạo", "cắt móng tay", "tuốc nơ vít", "kim", "nhọn"], category: "Hàng Gia dụng & Đời sống", aviation: "Ký Gửi", note: "Xếp vào góc vali ký gửi.", warning: "Vật sắc nhọn BẮT BUỘC KÝ GỬI." },
+            // ĐỒ DÙNG BÌNH THƯỜNG / GIẤY ƯỚT KHÔNG BỊ BÁO ĐỎ NỮA
+            { keywords: ["khăn", "giấy ướt", "bàn chải", "cốc", "băng dính", "băng vệ sinh", "móc áo", "giấy"], category: "Hàng Gia dụng & Đời sống", aviation: "Xách tay / Ký gửi", note: "Xếp vào các góc trống của vali.", warning: "" },
+            { keywords: ["dép", "giày", "tất", "quần", "áo", "váy", "đồ lót", "áo khoác", "len", "nón"], category: "Thời trang & Phụ kiện Nam", aviation: "Ký Gửi", note: "Cuộn tròn đồ để tiết kiệm diện tích.", warning: "" },
+            { keywords: ["balo", "vali", "ổ khóa", "gối cổ"], category: "Thể Thao & Du Lịch", aviation: "Xách tay / Ký gửi", note: "Gắn nametag ghi rõ Tên, SĐT.", warning: "" }
         ];
 
         function autoCategorize(name) {
@@ -156,17 +163,19 @@
             return { category: "Siêu Thị Tạp Hóa", aviation: "Kiểm tra lại", note: "Chưa rõ quy định, tự tìm hiểu xem xách tay hay ký gửi.", warning: "" };
         }
 
-        // Format tiền có dấu phẩy
-        function formatMoney(amount) {
-            return new Intl.NumberFormat('en-US').format(amount);
-        }
-
+        function formatMoney(amount) { return new Intl.NumberFormat('en-US').format(amount); }
         function formatPriceInput(e) {
             let val = e.target.value.replace(/\D/g, '');
             e.target.value = val ? Number(val).toLocaleString('en-US') : '';
         }
 
-        // Chuyển Tab
+        // Logic tăng/giảm số lượng
+        function adjustQty(change) {
+            let el = document.getElementById('itemQty');
+            let newVal = parseInt(el.value) + change;
+            if (newVal >= 1) el.value = newVal;
+        }
+
         function switchTab(tab) {
             currentTab = tab;
             ['kho', 'dangmua', 'vali'].forEach(t => {
@@ -178,15 +187,12 @@
             renderItems();
         }
 
-        // Logic Checkbox & CẢNH BÁO ĐỎ
         function toggleCheckbox(id) {
             let item = items.find(i => i.id === id);
             if (item) {
                 item.checked = !item.checked;
-                // Popup đỏ khi tick đồ nguy hiểm
-                if (item.checked && item.warning) {
-                    alert("🚨 QUY ĐỊNH BAY / HẢI QUAN TQ:\n\n" + item.warning);
-                }
+                if (item.checked && item.warning) alert("🚨 QUY ĐỊNH BAY / HẢI QUAN TQ:\n\n" + item.warning);
+                saveToStorage();
             }
             renderItems();
         }
@@ -200,24 +206,27 @@
         function batchAction(action) {
             let selected = items.filter(i => i.status === currentTab && i.checked);
             if (selected.length === 0) return;
-            
-            // XÓA THẲNG KHÔNG HỎI
             if(action === 'delete') {
                 items = items.filter(i => !(i.status === currentTab && i.checked));
             } else {
                 selected.forEach(i => { i.status = action; i.checked = false; });
             }
             document.getElementById('selectAllCheckbox').checked = false;
+            saveToStorage();
             renderItems();
         }
 
-        // Xóa lẻ từng cái cũng KHÔNG HỎI
         function deleteItem(id) {
             items = items.filter(i => i.id !== id);
+            saveToStorage();
             renderItems();
         }
 
-        // Render Giao Diện
+        function changeStatus(id, newStatus) {
+            let item = items.find(i => i.id === id);
+            if(item) { item.status = newStatus; item.checked = false; saveToStorage(); renderItems(); }
+        }
+
         function renderItems(searchText = "") {
             const listEl = document.getElementById('itemList');
             listEl.innerHTML = '';
@@ -230,14 +239,13 @@
             document.getElementById('badge-dangmua').innerText = items.filter(i => i.status === 'dangmua').length;
             document.getElementById('badge-vali').innerText = items.filter(i => i.status === 'vali').length;
 
+            // Tính tổng tiền (Giá 1 món * Số lượng)
             let totalPrice = filteredItems.reduce((sum, item) => sum + (Number(item.price) * item.qty), 0);
             document.getElementById('totalPriceDisplay').innerText = `${formatMoney(totalPrice)} đ`;
 
             let checkedCount = filteredItems.filter(i => i.checked).length;
             document.getElementById('selectedCount').innerText = checkedCount;
-            
-            if(checkedCount > 0) document.getElementById('batchActions').classList.replace('hidden', 'flex');
-            else document.getElementById('batchActions').classList.replace('flex', 'hidden');
+            document.getElementById('batchActions').classList.replace(checkedCount > 0 ? 'hidden' : 'flex', checkedCount > 0 ? 'flex' : 'hidden');
 
             filteredItems.forEach(item => {
                 let textClass = (item.checked && currentTab === 'vali') ? 'line-through-custom' : 'text-slate-800';
@@ -251,30 +259,30 @@
                 let actionBtns = '';
                 if (currentTab === 'kho') {
                     actionBtns = `
-                        <button onclick="changeStatus(${item.id}, 'dangmua')" class="w-8 h-8 flex items-center justify-center rounded-full bg-orange-50 text-orange-500 hover:bg-orange-100"><i class="fa-solid fa-cart-shopping"></i></button>
-                        <button onclick="changeStatus(${item.id}, 'vali')" class="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100"><i class="fa-solid fa-suitcase"></i></button>
+                        <button onclick="changeStatus(${item.id}, 'dangmua')" class="w-8 h-8 flex items-center justify-center rounded-full bg-orange-50 text-orange-500 hover:bg-orange-100"><i class="fa-solid fa-cart-shopping text-sm"></i></button>
+                        <button onclick="changeStatus(${item.id}, 'vali')" class="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100"><i class="fa-solid fa-suitcase text-sm"></i></button>
                     `;
                 } else if (currentTab === 'dangmua') {
                     actionBtns = `
-                        <button onclick="changeStatus(${item.id}, 'kho')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500"><i class="fa-solid fa-rotate-left"></i></button>
-                        <button onclick="changeStatus(${item.id}, 'vali')" class="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-50 text-emerald-600"><i class="fa-solid fa-suitcase"></i></button>
+                        <button onclick="changeStatus(${item.id}, 'kho')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500"><i class="fa-solid fa-rotate-left text-sm"></i></button>
+                        <button onclick="changeStatus(${item.id}, 'vali')" class="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-50 text-emerald-600"><i class="fa-solid fa-suitcase text-sm"></i></button>
                     `;
                 } else {
                     actionBtns = `
-                        <button onclick="changeStatus(${item.id}, 'kho')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500"><i class="fa-solid fa-box-open"></i></button>
+                        <button onclick="changeStatus(${item.id}, 'kho')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500"><i class="fa-solid fa-box-open text-sm"></i></button>
                     `;
                 }
 
                 listEl.innerHTML += `
                     <div class="tg-card p-3 flex gap-3">
                         <div class="pt-1"><input type="checkbox" class="custom-checkbox" onchange="toggleCheckbox(${item.id})" ${item.checked ? 'checked' : ''}></div>
-                        
                         <div class="flex-1 min-w-0">
                             <div class="flex items-start gap-1.5">
                                 <h3 class="font-bold text-[15px] leading-tight ${textClass} break-words">${item.name}</h3>
                                 <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold shrink-0 mt-0.5">x${item.qty}</span>
                             </div>
-                            ${item.price > 0 ? `<div class="text-[12px] font-bold text-blue-600 mt-0.5">${formatMoney(item.price)} đ</div>` : ''}
+                            
+                            ${item.price > 0 ? `<div class="text-[12px] font-bold text-blue-600 mt-0.5">${formatMoney(item.price)} đ <span class="text-[10px] text-slate-400 font-normal">/món</span></div>` : ''}
                             
                             ${item.note ? `<p class="text-[12px] text-slate-500 mt-1 leading-snug italic">${item.note}</p>` : ''}
                             
@@ -287,13 +295,13 @@
                                 <i class="fa-solid fa-plane-departure text-[10px] text-slate-400"></i>
                                 <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded ${aviaColor}">${item.aviation}</span>
                             </div>
-
                             ${warningHtml}
                         </div>
 
                         <div class="flex flex-col gap-2 justify-center pl-2 border-l border-slate-100 shrink-0">
                             ${actionBtns}
-                            <button onclick="deleteItem(${item.id})" class="w-8 h-8 flex items-center justify-center rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50"><i class="fa-solid fa-xmark"></i></button>
+                            <button onclick="openEditModal(${item.id})" class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-blue-500 hover:bg-blue-50"><i class="fa-solid fa-pen text-xs"></i></button>
+                            <button onclick="deleteItem(${item.id})" class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50"><i class="fa-solid fa-xmark text-lg"></i></button>
                         </div>
                     </div>
                 `;
@@ -301,7 +309,35 @@
             updateSidebarTags();
         }
 
-        function addItem() {
+        // Mở form Thêm mới
+        function openAddModal() {
+            editingId = null;
+            document.getElementById('modalTitle').innerText = "Thêm đồ mới";
+            document.getElementById('submitBtn').innerText = "Thêm vào kho";
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemQty').value = '1';
+            document.getElementById('itemPrice').value = '';
+            document.getElementById('addModal').classList.remove('hidden');
+        }
+
+        // Mở form Sửa
+        function openEditModal(id) {
+            editingId = id;
+            let item = items.find(i => i.id === id);
+            document.getElementById('modalTitle').innerText = "Sửa thông tin";
+            document.getElementById('submitBtn').innerText = "Lưu thay đổi";
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('itemQty').value = item.qty;
+            document.getElementById('itemPrice').value = item.price > 0 ? formatMoney(item.price) : '';
+            document.getElementById('addModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('addModal').classList.add('hidden');
+        }
+
+        // Lưu / Sửa Dữ liệu
+        function saveItem() {
             let name = document.getElementById('itemName').value.trim();
             let qty = document.getElementById('itemQty').value || 1;
             let priceStr = document.getElementById('itemPrice').value.replace(/,/g, '');
@@ -311,34 +347,43 @@
 
             let autoData = autoCategorize(name);
 
-            items.unshift({
-                id: Date.now(),
-                name: name,
-                qty: Number(qty),
-                price: price,
-                category: autoData.category,
-                aviation: autoData.aviation,
-                note: autoData.note,
-                status: 'kho',
-                warning: autoData.warning,
-                checked: false
-            });
+            if (editingId) {
+                // Sửa đồ
+                let itemIndex = items.findIndex(i => i.id === editingId);
+                if(itemIndex > -1) {
+                    items[itemIndex].name = name;
+                    items[itemIndex].qty = Number(qty);
+                    items[itemIndex].price = price;
+                    // Cập nhật lại tag/cảnh báo lỡ người dùng gõ nhầm tên sửa lại
+                    items[itemIndex].category = autoData.category;
+                    items[itemIndex].aviation = autoData.aviation;
+                    items[itemIndex].note = autoData.note;
+                    items[itemIndex].warning = autoData.warning;
+                }
+            } else {
+                // Thêm mới
+                items.unshift({
+                    id: Date.now(),
+                    name: name,
+                    qty: Number(qty),
+                    price: price,
+                    category: autoData.category,
+                    aviation: autoData.aviation,
+                    note: autoData.note,
+                    status: 'kho',
+                    warning: autoData.warning,
+                    checked: false
+                });
+            }
 
-            document.getElementById('itemName').value = '';
-            document.getElementById('itemPrice').value = '';
-            toggleAddModal();
-            switchTab('kho');
-        }
-
-        function changeStatus(id, newStatus) {
-            let item = items.find(i => i.id === id);
-            if(item) { item.status = newStatus; item.checked = false; renderItems(); }
+            saveToStorage();
+            closeModal();
+            renderItems();
         }
 
         function updateSidebarTags() {
             const listEl = document.getElementById('sidebarTagList');
-            // List các danh mục Lazada chuẩn
-            const lazadaCats = ["Dành riêng cho bạn", "Thiết Bị Điện Tử", "Phụ Kiện Điện Tử", "Sức Khỏe & Làm Đẹp", "Siêu Thị Tạp Hóa", "Hàng Gia dụng & Đời sống", "Thời trang & Phụ kiện Nữ", "Thời trang & Phụ kiện Nam", "Thể Thao & Du Lịch"];
+            const lazadaCats = ["Dành riêng cho bạn", "Thiết Bị Điện Tử", "Phụ Kiện Điện Tử", "Sức Khỏe & Làm Đẹp", "Siêu Thị Tạp Hóa", "Hàng Gia dụng & Đời sống", "Thời trang & Phụ kiện Nam", "Thời trang & Phụ kiện Nữ", "Thể Thao & Du Lịch"];
             
             listEl.innerHTML = `<button onclick="filterByTag('')" class="text-left px-3 py-2.5 rounded-lg ${currentFilterTag === '' ? 'bg-blue-50 text-blue-600 font-bold' : 'bg-slate-50 text-slate-700 font-medium'} text-sm">Hiển thị tất cả</button>`;
             
@@ -350,9 +395,6 @@
 
         function filterByTag(tag) { currentFilterTag = tag; toggleSidebar(); renderItems(); }
 
-        const modal = document.getElementById('addModal');
-        function toggleAddModal() { modal.classList.toggle('hidden'); }
-        
         const sidebar = document.getElementById('sidebarOverlay');
         const sidebarContent = document.getElementById('sidebarContent');
         function toggleSidebar() {
@@ -366,6 +408,8 @@
         }
 
         document.getElementById('searchInput').addEventListener('input', (e) => renderItems(e.target.value));
+        
+        // Render lần đầu khi vào trang
         renderItems();
     </script>
 </body>
