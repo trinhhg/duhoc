@@ -3,328 +3,293 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Packify V9 - Master Edition</title>
+    <title>Packify Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        /* Tối ưu hóa cho giao diện Mobile PWA */
+        body {
+            background-color: #f1f2f6; /* Nền xám nhạt chuẩn Telegram */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Ẩn scrollbar nhưng vẫn cuộn được */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
         
-        :root {
-            --primary: #2563eb; --primary-light: #eff6ff;
-            --success: #16a34a; --danger: #dc2626; --warn: #d97706;
-            --bg: #f8fafc; --surface: #ffffff;
-            --text-main: #1e293b; --text-sub: #64748b; --border: #e2e8f0;
-            --nav-h: 50px; --safe-b: env(safe-area-inset-bottom, 10px);
+        .tg-card {
+            background-color: #ffffff;
+            border-radius: 18px; /* Bo góc mượt như Telegram 12.4.1 */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: transform 0.1s ease;
+        }
+        .tg-card:active { transform: scale(0.98); }
+        
+        /* Checkbox custom */
+        .custom-checkbox {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #cbd5e1;
+            border-radius: 50%;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .custom-checkbox:checked {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+        .custom-checkbox:checked::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text-main); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
-
-        /* TOAST ALERT */
-        #toast-container { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-        .toast { background: #fee2e2; border-left: 4px solid var(--danger); color: #991b1b; padding: 12px 16px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-size: 0.85rem; font-weight: 500; display: flex; align-items: flex-start; gap: 8px; animation: slideDown 0.3s ease forwards; pointer-events: auto; }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* HEADER */
-        header { background: var(--surface); padding: 10px 15px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); z-index: 10; flex-shrink: 0; }
-        .menu-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-main); cursor: pointer; padding: 4px; }
-        .header-info { flex: 1; }
-        .app-title { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
-        .total-count { font-size: 0.75rem; color: var(--text-sub); font-weight: 500; }
-        .search-input { width: 100%; background: var(--bg); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; outline: none; margin-top: 8px; }
-
-        /* LAZADA-STYLE SIDEBAR */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; opacity: 0; pointer-events: none; transition: 0.2s; }
-        .overlay.active { opacity: 1; pointer-events: auto; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 260px; height: 100dvh; background: var(--surface); z-index: 50; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; }
-        .sidebar.active { left: 0; box-shadow: 4px 0 15px rgba(0,0,0,0.1); }
-        .sb-header { padding: 15px; font-weight: 700; font-size: 1.1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
-        .cat-list { flex: 1; overflow-y: auto; }
-        .cat-item { padding: 12px 15px; font-size: 0.9rem; font-weight: 500; color: var(--text-main); border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .cat-item.active { background: var(--primary-light); color: var(--primary); border-left: 3px solid var(--primary); }
-        .cat-count { background: var(--bg); color: var(--text-sub); font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; font-weight: 700; }
-
-        /* MAIN CONTENT */
-        .main-content { flex: 1; overflow-y: auto; padding: 12px; padding-bottom: calc(var(--nav-h) + var(--safe-b) + 20px); }
-        
-        /* PROGRESS BAR */
-        .progress-container { background: var(--surface); padding: 12px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 15px; }
-        .prog-header { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; }
-        .prog-track { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
-        .prog-fill { height: 100%; background: var(--success); width: 0%; transition: 0.3s; }
-
-        /* PRODUCT CARDS */
-        .card { background: var(--surface); border-radius: 10px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; gap: 10px; }
-        .card-info { flex: 1; min-width: 0; }
-        .item-name { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
-        .item-note { font-size: 0.8rem; color: var(--text-sub); line-height: 1.4; margin-bottom: 6px; }
-        
-        .tags { display: flex; flex-wrap: wrap; gap: 4px; }
-        .tag { font-size: 0.65rem; font-weight: 700; padding: 3px 6px; border-radius: 4px; border: 1px solid transparent; }
-        .tag-warn { background: #fef2f2; color: var(--danger); border-color: #fca5a5; }
-        .tag-safe { background: #f0fdf4; color: var(--success); border-color: #86efac; }
-        .tag-digi { background: #eff6ff; color: var(--primary); border-color: #93c5fd; }
-
-        /* BUTTONS */
-        .btn { width: 32px; height: 32px; border-radius: 8px; border: none; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; flex-shrink: 0; }
-        .btn-add { background: var(--primary-light); color: var(--primary); }
-        .btn-add.added { background: var(--success); color: white; }
-        .btn-minus { background: #fef2f2; color: var(--danger); }
-        .btn-check { width: 24px; height: 24px; border-radius: 4px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; background: white; margin-top: 2px; }
-        
-        /* DONE STATE */
-        .card.done { opacity: 0.6; background: var(--bg); }
-        .card.done .btn-check { background: var(--success); border-color: var(--success); }
-        .card.done .btn-check::after { content: '✓'; color: white; font-size: 14px; font-weight: bold; }
-        .card.done .item-name { text-decoration: line-through; }
-
-        /* ULTRA THIN BOTTOM NAV */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: calc(var(--nav-h) + var(--safe-b)); background: var(--surface); display: flex; border-top: 1px solid var(--border); padding-bottom: var(--safe-b); z-index: 20; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); gap: 2px; }
-        .nav-item.active { color: var(--primary); }
-        .nav-item svg { width: 20px; height: 20px; stroke-width: 2; fill: none; stroke: currentColor; }
-        .nav-label { font-size: 0.65rem; font-weight: 700; }
-
-        .hidden { display: none !important; }
+        /* Bottom Nav Safe Area */
+        .bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0); }
     </style>
 </head>
-<body>
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden">
 
-    <div id="toast-container"></div>
-    <div class="overlay" id="overlay" onclick="App.toggleSidebar()"></div>
-
-    <div class="sidebar" id="sidebar">
-        <div class="sb-header">
-            <span>Danh mục sản phẩm</span>
-            <span onclick="App.toggleSidebar()" style="cursor:pointer; color: var(--text-sub);">✕</span>
+    <header class="bg-white px-4 pt-6 pb-3 shadow-sm z-10 sticky top-0 flex flex-col gap-3">
+        <div class="flex justify-between items-center">
+            <button class="text-slate-600 text-xl w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <h1 class="text-xl font-bold text-blue-600 tracking-tight">Packify Pro</h1>
+            <button class="text-slate-600 text-xl w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+            </button>
         </div>
-        <div class="cat-list" id="cat-list"></div>
-    </div>
-
-    <header>
-        <button class="menu-btn" onclick="App.toggleSidebar()">☰</button>
-        <div class="header-info">
-            <div class="app-title">Packify</div>
-            <div class="total-count">Kho: <span id="global-count">0</span> items</div>
+        
+        <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="searchInput" placeholder="Tìm kiếm nhanh..." 
+                   class="w-full bg-slate-100 text-slate-700 rounded-full py-2.5 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all">
         </div>
     </header>
-    
-    <div style="padding: 0 15px; background: var(--surface);">
-        <input type="text" class="search-input" id="searchInput" placeholder="Tìm kiếm nhanh..." onkeyup="App.renderStore()">
-    </div>
 
-    <div class="main-content" id="view-store"></div>
-    
-    <div class="main-content hidden" id="view-bag">
-        <div class="progress-container">
-            <div class="prog-header">
-                <span>Tiến độ hành lý</span>
-                <span id="prog-text">0/0</span>
+    <main class="flex-1 overflow-y-auto p-4 pb-24" id="mainContent">
+        <div class="flex justify-between items-center mb-4 px-1">
+            <h2 class="text-lg font-bold" id="currentCategoryTitle">Kho: <span id="totalItems" class="text-blue-500">0</span> items</h2>
+            <div class="flex items-center gap-2">
+                <label class="text-sm text-slate-500 font-medium">Chọn tất cả</label>
+                <input type="checkbox" id="selectAll" class="custom-checkbox h-5 w-5">
             </div>
-            <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
         </div>
-        <div id="bag-list"></div>
-    </div>
 
-    <div class="bottom-nav">
-        <div class="nav-item active" id="tab-store" onclick="App.switchTab('store')">
-            <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line></svg>
-            <span class="nav-label">Kho Toàn Cầu</span>
-        </div>
-        <div class="nav-item" id="tab-bag" onclick="App.switchTab('bag')">
-            <svg viewBox="0 0 24 24"><path d="M20 16.2A2 2 0 0 0 22 14.3v-4.6a2 2 0 0 0-2-1.9M4 16.2A2 2 0 0 1 2 14.3v-4.6a2 2 0 0 1 2-1.9"></path><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="12" y1="2" x2="12" y2="22"></line></svg>
-            <span class="nav-label">Vali Của Tôi</span>
+        <div id="itemList" class="flex flex-col gap-3">
+            </div>
+    </main>
+
+    <button onclick="toggleAddModal()" class="fixed bottom-20 right-5 w-14 h-14 bg-blue-500 text-white rounded-full shadow-lg flex items-center justify-center text-2xl hover:bg-blue-600 transition-transform hover:scale-105 z-20">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <nav class="bg-white border-t border-slate-200 flex justify-around items-center h-16 bottom-nav fixed bottom-0 w-full z-10">
+        <button onclick="switchTab('kho')" id="tab-kho" class="flex flex-col items-center justify-center w-full h-full text-blue-500 transition-colors">
+            <i class="fa-solid fa-box text-xl mb-1"></i>
+            <span class="text-[10px] font-semibold">Kho Toàn Cầu</span>
+        </button>
+        <button onclick="switchTab('dangmua')" id="tab-dangmua" class="flex flex-col items-center justify-center w-full h-full text-slate-400 transition-colors">
+            <i class="fa-solid fa-cart-shopping text-xl mb-1"></i>
+            <span class="text-[10px] font-semibold">Đang Mua</span>
+        </button>
+        <button onclick="switchTab('vali')" id="tab-vali" class="flex flex-col items-center justify-center w-full h-full text-slate-400 transition-colors">
+            <i class="fa-solid fa-suitcase-rolling text-xl mb-1"></i>
+            <span class="text-[10px] font-semibold">Vali Của Tôi</span>
+        </button>
+    </nav>
+
+    <div id="addModal" class="fixed inset-0 bg-black bg-opacity-40 z-50 hidden flex items-end justify-center transition-opacity">
+        <div class="bg-white w-full rounded-t-3xl p-5 transform transition-transform translate-y-full" id="modalContent">
+            <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-5"></div>
+            <h3 class="text-xl font-bold mb-4">Thêm đồ mới</h3>
+            <input type="text" id="itemName" placeholder="Tên món đồ (VD: Hộ chiếu, Thuốc, Áo khoác...)" class="w-full bg-slate-100 rounded-xl p-3 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-200">
+            <div class="flex gap-3 mb-5">
+                <input type="number" id="itemQty" placeholder="Số lượng" value="1" class="w-1/3 bg-slate-100 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-200">
+            </div>
+            <button onclick="addItem()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl hover:bg-blue-600 transition-colors">
+                Thêm vào danh sách
+            </button>
         </div>
     </div>
 
     <script>
-        // MASTER DATABASE (Đã gom đủ mọi thứ cho Du học TQ)
-        const MASTER_DATA = [
-            // SETUP DIGITAL (Riêng cho TQ)
-            { id: 'dg1', cat: '💻 Setup Trước Khi Bay', name: 'Cài VPN (Clash/V2ray)', note: 'BẮT BUỘC. Tải app và mua gói mạng VN trước. Sang TQ không có VPN là mất sạch liên lạc.', tags: ['Khẩn cấp', 'Digital'], alert: 'CẢNH BÁO: Tường lửa TQ chặn Google, Facebook, Zalo. Phải cài VPN ngay khi còn ở VN!' },
-            { id: 'dg2', cat: '💻 Setup Trước Khi Bay', name: 'App Alipay & WeChat', note: 'Tải và xác minh bằng Hộ chiếu. Liên kết thẻ Visa/Mastercard nếu có.', tags: ['Tài chính', 'Digital'], alert: 'Lưu ý: WeChat cần người đang dùng quét mã để xác minh tạo tài khoản mới.' },
-            { id: 'dg3', cat: '💻 Setup Trước Khi Bay', name: 'Backup Script Tampermonkey', note: 'Export code (đã config phím F2) lên Drive để cài lại trên máy tính bên kia.', tags: ['Code', 'Digital'] },
-            { id: 'dg4', cat: '💻 Setup Trước Khi Bay', name: 'Truyện Bách hợp / ABO (Offline)', note: 'Tải định dạng PDF/Epub vào máy. Cách ly mạng hoặc ngồi tàu xe rất cần.', tags: ['Giải trí', 'Digital'] },
+        // Data mẫu (Có thể dùng LocalStorage để lưu vĩnh viễn)
+        let items = [
+            { id: 1, name: "App Alipay & WeChat", qty: 1, category: "Digital", tags: ["Tài chính", "Bắt buộc"], note: "Tải và xác minh bằng Hộ chiếu.", status: "vali", warning: "" },
+            { id: 2, name: "Backup Script Tampermonkey", qty: 1, category: "Code", tags: ["Backup"], note: "Export code lên Drive.", status: "kho", warning: "" }
+        ];
+        let currentTab = 'kho';
 
-            // CÔNG NGHỆ & ĐIỆN TỬ
-            { id: 'tc1', cat: '🔋 Thiết bị Công nghệ', name: 'Sạc dự phòng Cuktech 25 SE', note: 'Dung lượng 25000mAh. Không được bóc tem nhãn thông số.', tags: ['Xách tay HQ', 'Điện tử'], alert: 'LUẬT HÀNG KHÔNG: Tuyệt đối không để sạc dự phòng vào vali ký gửi. Hải quan TQ sẽ soi kỹ mặt in thông số Wh.' },
-            { id: 'tc2', cat: '🔋 Thiết bị Công nghệ', name: 'Điện thoại Vivo iQOO Neo 10', note: 'Kèm củ sạc 120W và dây cáp Type-C.', tags: ['Xách tay', 'Điện tử'] },
-            { id: 'tc3', cat: '🔋 Thiết bị Công nghệ', name: 'Phích cắm chuyển đổi 3 chấu chéo', note: 'Ổ cắm TQ không dùng chân tròn. Bắt buộc mang 1-2 cục.', tags: ['Ký gửi', 'Thiết yếu'] },
-            
-            // GIẤY TỜ
-            { id: 'doc1', cat: '📄 Giấy tờ nhập học', name: 'Hộ chiếu Gốc & Visa X2', note: 'Vật bất ly thân. Trình hải quan nhập cảnh.', tags: ['Xách tay', 'Tuyệt mật'], alert: 'Lưu ý: Đeo túi bao tử trước ngực để giữ Hộ chiếu, tuyệt đối không cất sâu vào balo.' },
-            { id: 'doc2', cat: '📄 Giấy tờ nhập học', name: 'Thư trúng tuyển (Giang Nam)', note: 'Bản gốc + 2 bản photo.', tags: ['Xách tay'] },
-            { id: 'doc3', cat: '📄 Giấy tờ nhập học', name: 'Form JW202 / DQ', note: 'Giấy phép du học sinh. Trình hải quan lúc nhập cảnh.', tags: ['Xách tay'] },
-
-            // THUỐC MEN & Y TẾ
-            { id: 'md1', cat: '💊 Tủ thuốc mini', name: 'Thuốc hạ sốt (Panadol Extra)', note: 'Thời tiết TQ thay đổi dễ cảm. Cần loại có cafein để tỉnh táo.', tags: ['Ký gửi', 'Thuốc'] },
-            { id: 'md2', cat: '💊 Tủ thuốc mini', name: 'Thuốc tiêu hóa (Berberin / Smecta)', note: 'Đồ ăn TQ siêu dầu mỡ và cay. Chắc chắn sẽ đau bụng mấy ngày đầu.', tags: ['Ký gửi', 'Thiết yếu'] },
-            { id: 'md3', cat: '💊 Tủ thuốc mini', name: 'Băng cá nhân (Urgo)', note: 'Xử lý xây xát nhẹ khi bê vác hành lý.', tags: ['Ký gửi'] },
-
-            // ĐỒ ĂN
-            { id: 'fd1', cat: '🍜 Lương thực cứu đói', name: 'Mì gói / Phở ăn liền', note: 'Đóng 10 gói. Đêm đầu tiên nhận phòng trọ sẽ không có đồ ăn.', tags: ['Ký gửi'] },
-            { id: 'fd2', cat: '🍜 Lương thực cứu đói', name: 'Ruốc thịt heo / Khô gà', note: 'Hút chân không, bóc sạch nhãn mác thương hiệu.', tags: ['Ký gửi HQ'], alert: 'HẢI QUAN: TQ cấm nhập cảnh các loại thịt có nhãn mác nước ngoài. Phải hút chân không thật kỹ ngụy trang.' },
-
-            // SINH HOẠT & MỸ PHẨM
-            { id: 'lf1', cat: '🧴 Mỹ phẩm & Sinh hoạt', name: 'Băng vệ sinh', note: 'Nên mang 3 bịch to. Lót quanh thành vali 28 để chống sốc đồ vật.', tags: ['Vali 28'] },
-            { id: 'lf2', cat: '🧴 Mỹ phẩm & Sinh hoạt', name: 'Nước tẩy trang / Sữa rửa mặt', note: 'Chiết ra chai nhỏ <100ml nếu xách tay, hoặc quăng thẳng chai to vào ký gửi.', tags: ['Chất lỏng'], alert: 'HÀNG KHÔNG: Chất lỏng xách tay lên máy bay không được quá 100ml mỗi chai.' },
-            { id: 'lf3', cat: '🧴 Mỹ phẩm & Sinh hoạt', name: 'Kéo cắt móng tay, Nhíp', note: 'Vật sắc nhọn phải cất ký gửi.', tags: ['Ký gửi HQ'], alert: 'HÀNG KHÔNG: Cấm xách tay vật sắc nhọn (kéo, dao lam, nhíp sắt).' }
+        // TỪ ĐIỂN THÔNG MINH: Tự động phân loại dựa vào từ khóa
+        const autoDict = [
+            { keywords: ["hộ chiếu", "visa", "jw202", "dq", "giấy tờ", "ảnh thẻ"], category: "Giấy tờ", tags: ["Quan trọng", "Bắt buộc"], note: "Kiểm tra kỹ trước khi đi!", warning: "Tuyệt đối không được quên món này ra sân bay!" },
+            { keywords: ["vpn", "wechat", "alipay", "tampermonkey", "code", "bách hợp", "abo", "điện thoại", "sạc", "laptop"], category: "Digital", tags: ["Công nghệ", "Giải trí"], note: "Setup kỹ dùng offline/bên mạng Trung.", warning: "" },
+            { keywords: ["thuốc", "đau bụng", "cảm", "băng gạc"], category: "Y tế", tags: ["Sức khỏe"], note: "Mang theo phòng hờ.", warning: "Lưu ý hạn sử dụng." },
+            { keywords: ["quần", "áo", "tất", "giày", "váy"], category: "Trang phục", tags: ["Hành lý"], note: "Gấp gọn tiết kiệm diện tích.", warning: "" }
         ];
 
-        let bag = JSON.parse(localStorage.getItem('packify_v9')) || [];
-        let curCat = 'All';
-
-        const App = {
-            init() {
-                document.getElementById('global-count').innerText = MASTER_DATA.length;
-                this.renderSidebar();
-                this.renderStore();
-            },
-
-            // --- UI CONTROLS ---
-            toggleSidebar() {
-                document.getElementById('sidebar').classList.toggle('active');
-                document.getElementById('overlay').classList.toggle('active');
-            },
-            switchTab(tab) {
-                document.getElementById('view-store').classList.toggle('hidden', tab !== 'store');
-                document.getElementById('view-bag').classList.toggle('hidden', tab !== 'bag');
-                document.getElementById('tab-store').classList.toggle('active', tab === 'store');
-                document.getElementById('tab-bag').classList.toggle('active', tab === 'bag');
-                if(tab === 'store') this.renderStore();
-                if(tab === 'bag') this.renderBag();
-            },
-            showToast(msg) {
-                const container = document.getElementById('toast-container');
-                const toast = document.createElement('div');
-                toast.className = 'toast';
-                toast.innerHTML = `<span>⚠️</span> <span>${msg}</span>`;
-                container.appendChild(toast);
-                setTimeout(() => toast.remove(), 6000); // Tự biến mất sau 6s
-            },
-            getTagsHTML(tags) {
-                return tags.map(t => {
-                    let cls = t.includes('HQ') || t.includes('Khẩn') ? 'tag-warn' : t.includes('Digi') || t.includes('Code') ? 'tag-digi' : 'tag-safe';
-                    return `<span class="tag ${cls}">${t}</span>`;
-                }).join('');
-            },
-
-            // --- SIDEBAR (LAZADA TREE) ---
-            renderSidebar() {
-                const list = document.getElementById('cat-list');
-                const categories = ['All', ...new Set(MASTER_DATA.map(i => i.cat))];
-                
-                list.innerHTML = categories.map(cat => {
-                    const count = cat === 'All' ? MASTER_DATA.length : MASTER_DATA.filter(i => i.cat === cat).length;
-                    return `
-                    <div class="cat-item ${curCat === cat ? 'active' : ''}" onclick="App.setCategory('${cat}')">
-                        <span>${cat === 'All' ? 'Tất cả danh mục' : cat}</span>
-                        <span class="cat-count">${count}</span>
-                    </div>`;
-                }).join('');
-            },
-            setCategory(cat) {
-                curCat = cat;
-                this.toggleSidebar();
-                this.renderSidebar();
-                this.renderStore();
-            },
-
-            // --- STORE TAB ---
-            renderStore() {
-                const container = document.getElementById('view-store');
-                const kw = document.getElementById('searchInput').value.toLowerCase();
-                container.innerHTML = '';
-
-                const catsToRender = curCat === 'All' ? [...new Set(MASTER_DATA.map(i => i.cat))] : [curCat];
-                
-                catsToRender.forEach(cat => {
-                    const items = MASTER_DATA.filter(i => i.cat === cat && (i.name.toLowerCase().includes(kw) || i.note.toLowerCase().includes(kw)));
-                    if(items.length === 0) return;
-
-                    let html = `<div style="font-weight:bold; margin:15px 0 8px; font-size:1.05rem;">${cat}</div>`;
-                    items.forEach(item => {
-                        const inBag = bag.some(x => x.id === item.id);
-                        html += `
-                        <div class="card">
-                            <div class="card-info">
-                                <div class="item-name">${item.name}</div>
-                                <div class="item-note">${item.note}</div>
-                                <div class="tags">${this.getTagsHTML(item.tags)}</div>
-                            </div>
-                            <button class="btn btn-add ${inBag ? 'added' : ''}" onclick="App.addStoreItem('${item.id}')">
-                                ${inBag ? '✓' : '+'}
-                            </button>
-                        </div>`;
-                    });
-                    container.innerHTML += html;
-                });
-            },
-            addStoreItem(id) {
-                const item = MASTER_DATA.find(i => i.id === id);
-                if(!bag.some(x => x.id === id)) {
-                    bag.push({...item, done: false});
-                    if(item.alert) this.showToast(item.alert);
-                } else {
-                    bag = bag.filter(x => x.id !== id);
+        // Logic tự động nhận diện
+        function autoCategorize(name) {
+            let lowerName = name.toLowerCase();
+            for (let dict of autoDict) {
+                if (dict.keywords.some(kw => lowerName.includes(kw))) {
+                    return { category: dict.category, tags: dict.tags, note: dict.note, warning: dict.warning };
                 }
-                localStorage.setItem('packify_v9', JSON.stringify(bag));
-                this.renderStore();
-            },
-
-            // --- BAG TAB ---
-            renderBag() {
-                const container = document.getElementById('bag-list');
-                container.innerHTML = '';
-
-                if(bag.length === 0) {
-                    container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-sub);">Vali đang trống.</div>';
-                    this.updateProgress();
-                    return;
-                }
-
-                const cats = [...new Set(bag.map(i => i.cat))];
-                cats.forEach(cat => {
-                    const items = bag.filter(i => i.cat === cat);
-                    let html = `<div style="font-weight:bold; margin:15px 0 8px; font-size:1.05rem;">${cat}</div>`;
-                    items.forEach(item => {
-                        html += `
-                        <div class="card ${item.done ? 'done' : ''}">
-                            <div class="btn-check" onclick="App.toggleDone('${item.id}')"></div>
-                            <div class="card-info" onclick="App.toggleDone('${item.id}')">
-                                <div class="item-name">${item.name}</div>
-                                <div class="item-note">${item.note}</div>
-                                <div class="tags">${this.getTagsHTML(item.tags)}</div>
-                            </div>
-                            <button class="btn btn-minus" onclick="App.removeBagItem('${item.id}')">-</button>
-                        </div>`;
-                    });
-                    container.innerHTML += html;
-                });
-                this.updateProgress();
-            },
-            toggleDone(id) {
-                const item = bag.find(i => i.id === id);
-                if(item) {
-                    item.done = !item.done;
-                    if(item.done && item.alert) this.showToast(item.alert);
-                    localStorage.setItem('packify_v9', JSON.stringify(bag));
-                    this.renderBag();
-                }
-            },
-            removeBagItem(id) {
-                bag = bag.filter(x => x.id !== id);
-                localStorage.setItem('packify_v9', JSON.stringify(bag));
-                this.renderBag();
-            },
-            updateProgress() {
-                const total = bag.length;
-                const done = bag.filter(i => i.done).length;
-                const pct = total === 0 ? 0 : Math.round((done / total) * 100);
-                document.getElementById('prog-text').innerText = `${done}/${total} (${pct}%)`;
-                document.getElementById('prog-fill').style.width = `${pct}%`;
             }
-        };
+            return { category: "Khác", tags: ["Chung"], note: "", warning: "" };
+        }
 
-        App.init();
+        // Đổi Tab
+        function switchTab(tab) {
+            currentTab = tab;
+            ['kho', 'dangmua', 'vali'].forEach(t => {
+                let el = document.getElementById(`tab-${t}`);
+                if(t === tab) {
+                    el.classList.replace('text-slate-400', 'text-blue-500');
+                } else {
+                    el.classList.replace('text-blue-500', 'text-slate-400');
+                }
+            });
+            let title = tab === 'kho' ? 'Kho Toàn Cầu' : (tab === 'dangmua' ? 'Đang Mua' : 'Vali Của Tôi');
+            document.getElementById('currentCategoryTitle').innerHTML = `${title}: <span id="totalItems" class="text-blue-500">0</span> items`;
+            renderItems();
+        }
+
+        // Render giao diện Item (Style thẻ bo góc xịn)
+        function renderItems(filterText = "") {
+            const listEl = document.getElementById('itemList');
+            listEl.innerHTML = '';
+            
+            let filteredItems = items.filter(i => i.status === currentTab);
+            if(filterText) {
+                filteredItems = filteredItems.filter(i => i.name.toLowerCase().includes(filterText.toLowerCase()));
+            }
+
+            document.getElementById('totalItems').innerText = filteredItems.length;
+
+            filteredItems.forEach(item => {
+                let badgeColors = item.tags.includes("Quan trọng") || item.tags.includes("Bắt buộc") 
+                                ? "bg-red-100 text-red-600" 
+                                : "bg-emerald-100 text-emerald-700";
+                
+                let warningHtml = item.warning ? `<div class="mt-2 text-xs text-red-500 flex items-center gap-1 bg-red-50 p-2 rounded-lg"><i class="fa-solid fa-triangle-exclamation"></i> ${item.warning}</div>` : '';
+
+                let statusBtn = '';
+                if(currentTab === 'kho') {
+                    statusBtn = `
+                        <button onclick="changeStatus(${item.id}, 'dangmua')" class="text-xs bg-orange-100 text-orange-600 px-3 py-1.5 rounded-lg font-bold hover:bg-orange-200">Mua</button>
+                        <button onclick="changeStatus(${item.id}, 'vali')" class="text-xs bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg font-bold hover:bg-blue-200">Cất Vali</button>
+                    `;
+                } else if(currentTab === 'dangmua') {
+                    statusBtn = `
+                        <button onclick="changeStatus(${item.id}, 'kho')" class="text-xs bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg font-bold">Hủy</button>
+                        <button onclick="changeStatus(${item.id}, 'vali')" class="text-xs bg-green-100 text-green-600 px-3 py-1.5 rounded-lg font-bold">Đã Mua & Cất</button>
+                    `;
+                } else {
+                    statusBtn = `<button onclick="changeStatus(${item.id}, 'kho')" class="text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded-lg font-bold hover:bg-red-200"><i class="fa-solid fa-minus"></i> Bỏ ra</button>`;
+                }
+
+                listEl.innerHTML += `
+                    <div class="tg-card p-4 flex gap-3 items-start cursor-pointer" onclick="checkWarning('${item.warning}')">
+                        <div class="pt-1">
+                            <input type="checkbox" class="custom-checkbox">
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-slate-800 text-[15px] leading-tight flex items-center gap-2">
+                                ${item.name} <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">x${item.qty}</span>
+                            </h3>
+                            ${item.note ? `<p class="text-[13px] text-slate-500 mt-1 leading-snug">${item.note}</p>` : ''}
+                            <div class="flex flex-wrap gap-1.5 mt-2">
+                                <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded ${badgeColors}">${item.tags[0] || item.category}</span>
+                                <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-600">${item.category}</span>
+                            </div>
+                            ${warningHtml}
+                            <div class="flex gap-2 mt-3 pt-3 border-t border-slate-100">
+                                ${statusBtn}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Xử lý thêm đồ
+        function addItem() {
+            let name = document.getElementById('itemName').value;
+            let qty = document.getElementById('itemQty').value || 1;
+            if(!name) return;
+
+            // Chạy AI "chạy bằng cơm" tự động phân loại
+            let autoData = autoCategorize(name);
+
+            items.push({
+                id: Date.now(),
+                name: name,
+                qty: qty,
+                category: autoData.category,
+                tags: autoData.tags,
+                note: autoData.note,
+                status: 'kho',
+                warning: autoData.warning
+            });
+
+            document.getElementById('itemName').value = '';
+            toggleAddModal();
+            switchTab('kho'); // Chuyển về kho để thấy đồ vừa thêm
+        }
+
+        // Cảnh báo khi tick vào đồ có warning
+        function checkWarning(warningMsg) {
+            if(warningMsg && warningMsg !== 'undefined') {
+                // Tích hợp rung (nếu mobile hỗ trợ)
+                if (navigator.vibrate) navigator.vibrate(200);
+                alert("⚠️ CHÚ Ý: " + warningMsg);
+            }
+        }
+
+        // Chuyển trạng thái
+        function changeStatus(id, newStatus) {
+            event.stopPropagation(); // Tránh click nhầm vào card
+            let itemIndex = items.findIndex(i => i.id === id);
+            if(itemIndex > -1) {
+                items[itemIndex].status = newStatus;
+                renderItems();
+            }
+        }
+
+        // Modal UX
+        const modal = document.getElementById('addModal');
+        const modalContent = document.getElementById('modalContent');
+        function toggleAddModal() {
+            if(modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                setTimeout(() => { modalContent.classList.remove('translate-y-full'); }, 10);
+            } else {
+                modalContent.classList.add('translate-y-full');
+                setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            }
+        }
+        modal.addEventListener('click', (e) => {
+            if(e.target === modal) toggleAddModal();
+        });
+
+        // Tìm kiếm
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            renderItems(e.target.value);
+        });
+
+        // Init
+        renderItems();
     </script>
 </body>
 </html>
