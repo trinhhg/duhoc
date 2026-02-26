@@ -2,196 +2,316 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto Fetch Packing App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Packify - Du Học Trung Quốc</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        :root { --bg: #f8fafc; --surface: #ffffff; --primary: #0ea5e9; --text-main: #0f172a; --border: #e2e8f0; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        
+        :root {
+            --bg: #f4f4f5; --surface: #ffffff; --primary: #3b82f6; --text-main: #18181b; 
+            --text-muted: #71717a; --border: #e4e4e7; --danger: #ef4444; --success: #22c55e;
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        header { background: var(--surface); padding: 15px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
-        .logo { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
-        .search-box { width: 300px; padding: 10px 15px; border: 1px solid var(--border); border-radius: 8px; outline: none; }
+        /* Mobile App Header */
+        header { background: var(--surface); padding: 16px 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); z-index: 10; flex-shrink: 0; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .app-title { font-size: 1.25rem; font-weight: 700; color: var(--primary); letter-spacing: -0.5px; }
         
-        .app-container { display: flex; flex: 1; overflow: hidden; }
-        .sidebar { width: 250px; background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; padding: 15px 0; }
-        .cat-item { padding: 12px 20px; cursor: pointer; font-size: 0.95rem; font-weight: 500; color: #64748b; text-transform: capitalize; border-left: 3px solid transparent; }
-        .cat-item:hover { background: #f1f5f9; color: var(--text-main); }
-        .cat-item.active { border-left-color: var(--primary); background: #f0f9ff; color: var(--primary); font-weight: 600; }
+        .search-container { position: relative; }
+        .search-input { width: 100%; background: #f4f4f5; border: none; padding: 10px 16px; border-radius: 12px; font-size: 0.95rem; outline: none; }
+        
+        /* Main Scrollable Area */
+        .main-content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 90px; }
+        
+        /* Category Block */
+        .category-group { margin-bottom: 24px; }
+        .cat-title { font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        
+        /* Product Card - Clean & Informative */
+        .card { background: var(--surface); border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.02); display: flex; flex-direction: column; position: relative; }
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        
+        .item-info { flex: 1; padding-right: 12px; }
+        .item-name { font-size: 1.05rem; font-weight: 600; color: var(--text-main); margin-bottom: 4px; line-height: 1.3; }
+        .item-note { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        /* Tags System */
+        .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .tag { font-size: 0.7rem; font-weight: 600; padding: 4px 8px; border-radius: 6px; }
+        .tag-balo { background: #fee2e2; color: #b91c1c; } /* Xách tay - Đỏ nhạt */
+        .tag-vali { background: #e0e7ff; color: #3730a3; } /* Ký gửi - Xanh đậm */
+        .tag-digital { background: #dcfce7; color: #15803d; } /* Digital - Xanh lá */
+        .tag-warn { background: #fef08a; color: #854d0e; border: 1px solid #fde047; } /* Lưu ý hải quan */
 
-        .main-content { flex: 1; overflow-y: auto; padding: 20px; background: var(--bg); position: relative; }
-        .loader { display: none; text-align: center; margin-top: 50px; font-weight: bold; color: var(--primary); }
-        
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
-        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 15px; display: flex; flex-direction: column; position: relative; }
-        .card img { width: 100%; height: 120px; object-fit: contain; margin-bottom: 10px; border-radius: 6px; background: #f8fafc; }
-        .item-name { font-size: 1.05rem; font-weight: 600; margin-bottom: 5px; padding-right: 30px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        
-        .tags { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; }
-        .tag { font-size: 0.7rem; padding: 3px 8px; border-radius: 12px; font-weight: 600; }
-        .tag-balo { background: #e0e7ff; color: #3730a3; } 
-        .tag-vali { background: #f3e8ff; color: #6b21a8; } 
-        .tag-liquid { background: #e0f2fe; color: #0369a1; } 
-        .tag-food { background: #dcfce7; color: #15803d; }
+        /* Add Button (Icon) */
+        .btn-action { width: 36px; height: 36px; border-radius: 10px; border: none; background: #eff6ff; color: var(--primary); font-size: 1.4rem; font-weight: 500; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+        .btn-action.added { background: var(--success); color: white; }
+        .btn-remove { background: #fee2e2; color: var(--danger); }
 
-        .btn-add { position: absolute; top: 15px; right: 15px; width: 32px; height: 32px; border-radius: 8px; border: none; background: #f1f5f9; color: var(--primary); font-size: 1.2rem; cursor: pointer; font-weight: bold; }
-        .btn-add:hover { background: var(--primary); color: white; }
-        .btn-add.added { background: #10b981; color: white; }
+        /* Checklist specific */
+        .check-area { display: flex; align-items: center; gap: 12px; width: 100%; }
+        .custom-checkbox { width: 24px; height: 24px; border-radius: 6px; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .check-area.done .custom-checkbox { background: var(--success); border-color: var(--success); }
+        .check-area.done .custom-checkbox::after { content: "✓"; color: white; font-weight: bold; font-size: 14px; }
+        .check-area.done .item-name, .check-area.done .item-note { text-decoration: line-through; color: #a1a1aa; }
+        .check-area.done .tag { opacity: 0.5; }
+
+        /* Progress Bar */
+        .progress-box { background: var(--surface); padding: 16px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .progress-text { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; }
+        .bar-bg { height: 8px; background: #f4f4f5; border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; background: var(--primary); width: 0%; transition: 0.3s ease; }
+
+        /* Bottom Navigation */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); display: flex; justify-content: space-around; padding: 12px 0 var(--safe-bottom); box-shadow: 0 -1px 10px rgba(0,0,0,0.05); z-index: 20; border-top: 1px solid var(--border); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 0.75rem; font-weight: 600; width: 50%; padding: 8px 0; }
+        .nav-item.active { color: var(--primary); }
+        .nav-icon { font-size: 1.4rem; }
+        
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">⚡ Auto-Fetch Packing</div>
-        <input type="text" class="search-box" id="search" placeholder="Tìm đồ (VD: iphone, cream)..." onkeyup="filterItems()">
-        <div style="font-weight: 600;">Vali: <span id="cart-count" style="color: var(--primary);">0</span> món</div>
+        <div class="header-top">
+            <div class="app-title">📦 Packify</div>
+        </div>
+        <div class="search-container" id="search-box">
+            <input type="text" class="search-input" id="searchInput" placeholder="Tìm giày, sạc, giấy tờ..." onkeyup="renderStore()">
+        </div>
     </header>
 
-    <div class="app-container">
-        <div class="sidebar" id="sidebar">
-            </div>
+    <div class="main-content" id="view-store">
+        </div>
 
-        <div class="main-content">
-            <h2 id="cat-title" style="margin-bottom: 20px; text-transform: capitalize;">Tất cả đồ vật</h2>
-            <div id="loader" class="loader">Đang tự động kéo API data về... ⏳</div>
-            <div class="grid" id="grid">
-                </div>
+    <div class="main-content hidden" id="view-bag">
+        <div class="progress-box">
+            <div class="progress-text">
+                <span>Tiến độ hành lý</span>
+                <span id="progress-count">0/0</span>
+            </div>
+            <div class="bar-bg"><div class="bar-fill" id="progress-bar"></div></div>
+        </div>
+        <div id="bag-items"></div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" id="tab-store" onclick="switchTab('store')">
+            <span class="nav-icon">🛒</span>
+            <span>Kho Đồ</span>
+        </div>
+        <div class="nav-item" id="tab-bag" onclick="switchTab('bag')">
+            <span class="nav-icon">🧳</span>
+            <span>Vali Của Tôi</span>
         </div>
     </div>
 
     <script>
-        const API_URL = 'https://dummyjson.com/products?limit=100'; // Nguồn data tự động free
-        let rawData = [];
-        let categories = [];
-        let currentCat = 'All';
-        let myChecklist = JSON.parse(localStorage.getItem('auto_packing_list')) || [];
-
-        // HÀM MIDDLEWARE: Tự động phân tích API và gán Tag hành lý
-        function autoGenerateTags(category) {
-            let tags = [];
-            switch(category) {
-                case 'smartphones':
-                case 'laptops':
-                    tags.push({ text: 'Xách tay bắt buộc', class: 'tag-balo' });
-                    tags.push({ text: 'Điện tử', class: 'tag-balo' });
-                    break;
-                case 'skincare':
-                case 'fragrances':
-                    tags.push({ text: 'Chất lỏng', class: 'tag-liquid' });
-                    tags.push({ text: 'Ký gửi Vali 24', class: 'tag-vali' });
-                    break;
-                case 'groceries':
-                    tags.push({ text: 'Đồ ăn', class: 'tag-food' });
-                    tags.push({ text: 'Ký gửi Vali 24', class: 'tag-vali' });
-                    break;
-                case 'womens-dresses':
-                case 'mens-shirts':
-                case 'womens-shoes':
-                    tags.push({ text: 'Quần áo & Giày', class: 'tag-vali' });
-                    tags.push({ text: 'Vali 28', class: 'tag-vali' });
-                    break;
-                default:
-                    tags.push({ text: 'Tùy chọn', class: 'tag-vali' });
+        // DATA ĐÃ CHUẨN HÓA - Tên chung, mô tả chi tiết, tag rõ ràng
+        const db = [
+            {
+                id: 'doc1', cat: '📄 Giấy tờ cốt lõi', name: 'Hộ chiếu & Visa X2', 
+                note: 'Bản gốc còn hạn. Tuyệt đối không để quên hay nhét vào vali ký gửi.', 
+                tags: [{text: 'Xách tay', class: 'tag-balo'}, {text: 'Quan trọng', class: 'tag-warn'}]
+            },
+            {
+                id: 'doc2', cat: '📄 Giấy tờ cốt lõi', name: 'Thư báo trúng tuyển ĐH Giang Nam', 
+                note: 'Bản gốc và 2 bản photo để làm thủ tục nhập học tháng 3.', 
+                tags: [{text: 'Xách tay', class: 'tag-balo'}]
+            },
+            {
+                id: 'doc3', cat: '📄 Giấy tờ cốt lõi', name: 'Form JW202 / DQ', 
+                note: 'Giấy tờ bắt buộc với du học sinh trình hải quan.', 
+                tags: [{text: 'Xách tay', class: 'tag-balo'}]
+            },
+            {
+                id: 'dig1', cat: '💻 Hành trang Digital', name: 'Tải sẵn Truyện offline', 
+                note: 'Thể loại Bách hợp, ABO, Hào môn thế gia... Lưu định dạng epub/pdf đọc lúc chờ tàu xe.', 
+                tags: [{text: 'Điện thoại', class: 'tag-digital'}]
+            },
+            {
+                id: 'dig2', cat: '💻 Hành trang Digital', name: 'Cập nhật Game', 
+                note: 'Tải sẵn data Genshin Impact bằng Wifi ở nhà, sang đó tải bằng 4G rất xót tiền.', 
+                tags: [{text: 'Điện thoại', class: 'tag-digital'}]
+            },
+            {
+                id: 'dig3', cat: '💻 Hành trang Digital', name: 'Backup Script Web', 
+                note: 'Export mã nguồn Tampermonkey (đã config phím F2) lên Drive để sang đó đồng bộ dùng tiếp.', 
+                tags: [{text: 'Laptop/Cloud', class: 'tag-digital'}]
+            },
+            {
+                id: 'tech1', cat: '🔋 Thiết bị & Công nghệ', name: 'Điện thoại chính', 
+                note: 'Bắt buộc cài sẵn app VPN (Clash/V2ray) từ VN. Đừng quên mang theo củ sạc nhanh.', 
+                tags: [{text: 'Xách tay', class: 'tag-balo'}, {text: 'Hải quan soi', class: 'tag-warn'}]
+            },
+            {
+                id: 'tech2', cat: '🔋 Thiết bị & Công nghệ', name: 'Sạc dự phòng', 
+                note: 'Model 25000mAh (92.5Wh) hoàn toàn hợp lệ bay. Bắt buộc để xách tay, hải quan sẽ soi thông số in trên vỏ.', 
+                tags: [{text: 'Xách tay', class: 'tag-balo'}, {text: 'Hải quan check', class: 'tag-warn'}]
+            },
+            {
+                id: 'tech3', cat: '🔋 Thiết bị & Công nghệ', name: 'Phích cắm chuyển đổi', 
+                note: 'Đầu nối sang 3 chấu chéo. Cực kỳ quan trọng vì ổ cắm tường TQ không dùng chân tròn.', 
+                tags: [{text: 'Vali 24', class: 'tag-vali'}]
+            },
+            {
+                id: 'life1', cat: '🧴 Sinh hoạt & Y tế', name: 'Băng vệ sinh / Cốc nguyệt san', 
+                note: 'Mang đủ dùng vài chu kỳ đầu. Lót xung quanh vali 28 để chống sốc.', 
+                tags: [{text: 'Vali 28', class: 'tag-vali'}]
+            },
+            {
+                id: 'life2', cat: '🧴 Sinh hoạt & Y tế', name: 'Thuốc men cơ bản', 
+                note: 'Panadol, Berberin, thuốc dị ứng, băng gạc. Đóng chung vào 1 túi zip.', 
+                tags: [{text: 'Vali 24', class: 'tag-vali'}]
+            },
+            {
+                id: 'life3', cat: '🧴 Sinh hoạt & Y tế', name: 'Bộ chiết mỹ phẩm mini', 
+                note: 'Sữa tắm, dầu gội đủ dùng 1 tuần. Tránh mang chai lớn nặng vali.', 
+                tags: [{text: 'Vali 24', class: 'tag-vali'}, {text: 'Chất lỏng', class: 'tag-warn'}]
+            },
+            {
+                id: 'food1', cat: '🍜 Đồ ăn dự phòng', name: 'Mì gói / Đồ khô', 
+                note: 'Vài gói cứu đói lúc nửa đêm. Ruốc thịt phải hút chân không, bỏ nhãn mác kỹ.', 
+                tags: [{text: 'Vali 24', class: 'tag-vali'}, {text: 'Khai báo HQ', class: 'tag-warn'}]
+            },
+            {
+                id: 'cloth1', cat: '👕 Quần áo & Giày', name: 'Giày Sneaker', 
+                note: 'Mang 1 đôi đi đường, 1 đôi cất vali. Nhét tất/vớ vào trong lòng giày tiết kiệm chỗ.', 
+                tags: [{text: 'Vali 28', class: 'tag-vali'}]
+            },
+            {
+                id: 'cloth2', cat: '👕 Quần áo & Giày', name: 'Áo khoác / Đồ ấm', 
+                note: 'Thời tiết tháng 3 vẫn se lạnh. Áo dày nhất nên mặc thẳng lên người ra sân bay.', 
+                tags: [{text: 'Mặc / Vali 28', class: 'tag-vali'}]
             }
-            return tags;
-        }
+        ];
 
-        async function fetchAutoData() {
-            document.getElementById('loader').style.display = 'block';
-            try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
-                
-                // Chuẩn hóa data từ API
-                rawData = data.products.map(p => ({
-                    id: p.id,
-                    name: p.title,
-                    category: p.category,
-                    image: p.thumbnail,
-                    tags: autoGenerateTags(p.category) // Tự động gắn tag
-                }));
+        let myBag = JSON.parse(localStorage.getItem('packify_bag_v6')) || [];
 
-                // Tự động rút trích danh mục từ API
-                categories = ['All', ...new Set(rawData.map(p => p.category))];
-                
-                document.getElementById('loader').style.display = 'none';
-                renderSidebar();
-                renderGrid();
-                updateCount();
-            } catch (error) {
-                document.getElementById('loader').innerText = 'Lỗi kéo API. Kiểm tra mạng!';
-            }
-        }
-
-        function renderSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.innerHTML = categories.map(cat => 
-                `<div class="cat-item ${currentCat === cat ? 'active' : ''}" onclick="selectCat('${cat}')">
-                    ${cat === 'All' ? '🌍 Tất cả (100+ items)' : cat.replace('-', ' ')}
-                </div>`
-            ).join('');
-        }
-
-        function selectCat(cat) {
-            currentCat = cat;
-            document.getElementById('cat-title').innerText = cat === 'All' ? '🌍 Tất cả đồ vật' : cat.replace('-', ' ');
-            renderSidebar();
-            renderGrid();
-        }
-
-        function filterItems() {
-            currentCat = 'All';
-            renderSidebar();
-            renderGrid();
-        }
-
-        function renderGrid() {
-            const grid = document.getElementById('grid');
-            const search = document.getElementById('search').value.toLowerCase();
+        function switchTab(tab) {
+            document.getElementById('view-store').classList.toggle('hidden', tab !== 'store');
+            document.getElementById('search-box').classList.toggle('hidden', tab !== 'store');
+            document.getElementById('view-bag').classList.toggle('hidden', tab !== 'bag');
             
-            const filtered = rawData.filter(i => {
-                const matchCat = currentCat === 'All' || i.category === currentCat;
-                const matchSearch = i.name.toLowerCase().includes(search);
-                return matchCat && matchSearch;
+            document.getElementById('tab-store').classList.toggle('active', tab === 'store');
+            document.getElementById('tab-bag').classList.toggle('active', tab === 'bag');
+            
+            if(tab === 'store') renderStore();
+            if(tab === 'bag') renderBag();
+        }
+
+        function renderStore() {
+            const container = document.getElementById('view-store');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            container.innerHTML = '';
+
+            const categories = [...new Set(db.map(i => i.cat))];
+            
+            categories.forEach(cat => {
+                const items = db.filter(i => i.cat === cat && (i.name.toLowerCase().includes(search) || i.note.toLowerCase().includes(search)));
+                if(items.length === 0) return;
+
+                let html = `<div class="category-group"><div class="cat-title">${cat}</div>`;
+                items.forEach(item => {
+                    const isAdded = myBag.some(x => x.id === item.id);
+                    html += `
+                        <div class="card">
+                            <div class="card-top">
+                                <div class="item-info">
+                                    <div class="item-name">${item.name}</div>
+                                    <div class="item-note">${item.note}</div>
+                                </div>
+                                <button class="btn-action ${isAdded ? 'added' : ''}" onclick="toggleItem('${item.id}')">
+                                    ${isAdded ? '✓' : '+'}
+                                </button>
+                            </div>
+                            <div class="tags">
+                                ${item.tags.map(t => `<span class="tag ${t.class}">${t.text}</span>`).join('')}
+                            </div>
+                        </div>`;
+                });
+                html += `</div>`;
+                container.innerHTML += html;
             });
-
-            grid.innerHTML = filtered.map(item => {
-                const isAdded = myChecklist.includes(item.id);
-                return `
-                <div class="card">
-                    <img src="${item.image}" alt="${item.name}" loading="lazy">
-                    <div class="item-name">${item.name}</div>
-                    <div class="tags">
-                        ${item.tags.map(t => `<span class="tag ${t.class}">${t.text}</span>`).join('')}
-                    </div>
-                    <button class="btn-add ${isAdded ? 'added' : ''}" onclick="toggleItem(${item.id}, this)">
-                        ${isAdded ? '✓' : '+'}
-                    </button>
-                </div>`;
-            }).join('');
         }
 
-        function toggleItem(id, btn) {
-            if(!myChecklist.includes(id)) {
-                myChecklist.push(id);
-                btn.classList.add('added');
-                btn.innerText = '✓';
-            } else {
-                myChecklist = myChecklist.filter(i => i !== id);
-                btn.classList.remove('added');
-                btn.innerText = '+';
+        function renderBag() {
+            const container = document.getElementById('bag-items');
+            container.innerHTML = '';
+
+            if(myBag.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#a1a1aa; padding:40px;">Vali đang trống trơn.</div>';
+                updateProgress();
+                return;
             }
-            localStorage.setItem('auto_packing_list', JSON.stringify(myChecklist));
-            updateCount();
+
+            const categories = [...new Set(myBag.map(i => i.cat))];
+            
+            categories.forEach(cat => {
+                const items = myBag.filter(i => i.cat === cat);
+                let html = `<div class="category-group"><div class="cat-title">${cat}</div>`;
+                items.forEach(item => {
+                    html += `
+                        <div class="card" onclick="toggleCheck('${item.id}')">
+                            <div class="check-area ${item.checked ? 'done' : ''}">
+                                <div class="custom-checkbox"></div>
+                                <div class="item-info">
+                                    <div class="item-name">${item.name}</div>
+                                    <div class="item-note">${item.note}</div>
+                                    <div class="tags">
+                                        ${item.tags.map(t => `<span class="tag ${t.class}">${t.text}</span>`).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+                html += `</div>`;
+                container.innerHTML += html;
+            });
+            updateProgress();
         }
 
-        function updateCount() {
-            document.getElementById('cart-count').innerText = myChecklist.length;
+        function toggleItem(id) {
+            const index = myBag.findIndex(i => i.id === id);
+            if(index > -1) {
+                myBag.splice(index, 1);
+            } else {
+                const item = db.find(i => i.id === id);
+                myBag.push({...item, checked: false});
+            }
+            saveData();
+            renderStore();
         }
 
-        // Kích hoạt kéo API ngay khi chạy code
-        fetchAutoData();
+        function toggleCheck(id) {
+            const item = myBag.find(i => i.id === id);
+            if(item) {
+                item.checked = !item.checked;
+                saveData();
+                renderBag();
+            }
+        }
+
+        function updateProgress() {
+            const total = myBag.length;
+            const done = myBag.filter(i => i.checked).length;
+            const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+            
+            document.getElementById('progress-count').innerText = `${done}/${total}`;
+            document.getElementById('progress-bar').style.width = `${percent}%`;
+        }
+
+        function saveData() {
+            localStorage.setItem('packify_bag_v6', JSON.stringify(myBag));
+        }
+
+        // Khởi chạy
+        renderStore();
     </script>
 </body>
 </html>
