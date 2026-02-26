@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Packify Pro v6</title>
+    <title>Packify Pro v7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -65,11 +65,6 @@
     </main>
 
     <nav class="bg-white border-t border-slate-200 flex justify-around items-center h-[60px] pb-[env(safe-area-inset-bottom)] fixed bottom-0 w-full z-10 px-1">
-        <button onclick="openAddModal()" class="relative flex flex-col items-center justify-center w-full h-full text-blue-500 transition-colors">
-            <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center mb-0.5 shadow-sm active:scale-95 transition-transform"><i class="fa-solid fa-plus"></i></div>
-            <span class="text-[10px] font-bold text-blue-600">Thêm Mới</span>
-        </button>
-        
         <button onclick="switchTab('kho')" id="tab-kho" class="relative flex flex-col items-center justify-center w-full h-full text-blue-500">
             <div class="relative"><i class="fa-solid fa-box text-xl mb-0.5"></i><span id="badge-kho" class="absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
             <span class="text-[10px] font-semibold">Kho Toàn Cầu</span>
@@ -82,6 +77,10 @@
             <div class="relative"><i class="fa-solid fa-suitcase-rolling text-xl mb-0.5"></i><span id="badge-vali" class="absolute -top-1.5 -right-2 bg-emerald-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
             <span class="text-[10px] font-semibold">Vali Của Tôi</span>
         </button>
+        <button onclick="openAddModal()" class="relative flex flex-col items-center justify-center w-full h-full text-blue-500 transition-colors">
+            <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center mb-0.5 shadow-sm active:scale-95 transition-transform"><i class="fa-solid fa-plus"></i></div>
+            <span class="text-[10px] font-bold text-blue-600">Thêm Mới</span>
+        </button>
     </nav>
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-50 hidden" onclick="toggleSidebar()">
@@ -93,7 +92,7 @@
         </div>
     </div>
 
-    <div id="addModal" class="fixed inset-0 bg-black/50 z-50 hidden flex justify-center items-center px-4">
+    <div id="addModal" class="fixed inset-0 bg-black/50 z-50 hidden flex justify-center items-start pt-[12vh] px-4">
         <div class="bg-white w-full max-w-sm rounded-2xl p-5 shadow-xl" id="modalContent">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-bold" id="modalTitle">Thêm đồ mới</h3>
@@ -133,7 +132,6 @@
         let currentFilterTag = '';
         let editingId = null;
 
-        // ĐÃ ĐỔI TÊN DANH MỤC THÀNH "THỜI TRANG & PHỤ KIỆN"
         const autoDict = [
             { keywords: ["hộ chiếu", "visa", "jw202", "dq", "giấy báo", "tiền", "thẻ visa", "alipay", "wechat", "căn cước", "ảnh thẻ"], category: "Dành riêng cho bạn", aviation: "Bắt Buộc Xách Tay", note: "Luôn mang theo người.", warning: "CỰC KỲ QUAN TRỌNG: Tuyệt đối không để trong vali ký gửi!" },
             { keywords: ["laptop", "điện thoại", "ipad", "máy ảnh"], category: "Thiết Bị Điện Tử", aviation: "Bắt Buộc Xách Tay", note: "Sạc đầy pin trước khi bay.", warning: "Cấm ký gửi thiết bị có pin dung lượng lớn." },
@@ -184,7 +182,6 @@
             let item = items.find(i => i.id === id);
             if (item) {
                 item.checked = !item.checked;
-                // ĐÃ TẮT BẢNG POPUP ALERT KHI TICK. CẢNH BÁO CHỈ HIỆN TRONG THẺ.
                 saveToStorage();
             }
             renderItems();
@@ -239,7 +236,6 @@
             document.getElementById('selectedCount').innerText = checkedCount;
             document.getElementById('batchActions').classList.replace(checkedCount > 0 ? 'hidden' : 'flex', checkedCount > 0 ? 'flex' : 'hidden');
 
-            // LOOP QUA CÁC ITEM SAU KHI ĐÃ FILTER ĐỂ ĐÁNH STT THÔNG MINH
             filteredItems.forEach((item, index) => {
                 let textClass = (item.checked && currentTab === 'vali') ? 'line-through-custom' : 'text-slate-800';
                 let warningHtml = item.warning ? `<div class="mt-2 text-[11px] text-red-600 bg-red-50 p-2 rounded-lg font-medium leading-snug"><i class="fa-solid fa-triangle-exclamation mr-1"></i>${item.warning}</div>` : '';
@@ -268,10 +264,13 @@
 
                 listEl.innerHTML += `
                     <div class="tg-card p-3 flex gap-3">
-                        <div class="pt-1"><input type="checkbox" class="custom-checkbox" onchange="toggleCheckbox(${item.id})" ${item.checked ? 'checked' : ''}></div>
+                        <div class="flex flex-col items-center justify-between shrink-0 pt-1 pb-1 w-[24px]">
+                            <input type="checkbox" class="custom-checkbox" onchange="toggleCheckbox(${item.id})" ${item.checked ? 'checked' : ''}>
+                            <span class="text-blue-600 font-black text-[13px] mt-4">#${index + 1}</span>
+                        </div>
+                        
                         <div class="flex-1 min-w-0">
                             <div class="flex items-start gap-1.5">
-                                <span class="text-slate-300 font-black text-[15px] shrink-0">#${index + 1}</span>
                                 <h3 class="font-bold text-[15px] leading-tight ${textClass} break-words">${item.name}</h3>
                                 <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold shrink-0 mt-0.5">x${item.qty}</span>
                             </div>
@@ -369,7 +368,6 @@
 
         function updateSidebarTags() {
             const listEl = document.getElementById('sidebarTagList');
-            // ĐÃ GỘP DANH MỤC THỜI TRANG TẠI ĐÂY
             const lazadaCats = ["Dành riêng cho bạn", "Thiết Bị Điện Tử", "Phụ Kiện Điện Tử", "Sức Khỏe & Làm Đẹp", "Siêu Thị Tạp Hóa", "Hàng Gia dụng & Đời sống", "Thời trang & Phụ kiện", "Thể Thao & Du Lịch"];
             
             listEl.innerHTML = `<button onclick="filterByTag('')" class="text-left px-3 py-2.5 rounded-lg ${currentFilterTag === '' ? 'bg-blue-50 text-blue-600 font-bold' : 'bg-slate-50 text-slate-700 font-medium'} text-sm">Hiển thị tất cả</button>`;
