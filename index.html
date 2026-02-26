@@ -3,258 +3,295 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Packing Database - Vô Tích 2026</title>
+    <title>Packify - Smart Packing App</title>
     <style>
-        :root { --primary: #059669; --bg: #f0fdf4; --card: #ffffff; --text: #1f2937; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); max-width: 1000px; margin: 0 auto; padding: 20px; }
-        h1 { text-align: center; color: var(--primary); font-size: 1.8rem; margin-bottom: 5px; }
-        p.subtitle { text-align: center; color: #4b5563; margin-top: 0; margin-bottom: 25px; }
-        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .card h3 { margin-top: 0; color: #374151; font-size: 1.1rem; }
-        input[type="text"], select, button { padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 15px; outline: none; }
-        button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button:hover { background: #047857; }
-        .add-form { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
-        .add-form input { flex: 2; min-width: 200px; }
-        .add-form select { flex: 1; min-width: 130px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
-        .category { background: var(--card); border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; }
-        .category-header { background: #d1fae5; padding: 12px 20px; font-weight: bold; font-size: 1.1rem; color: #065f46; display: flex; justify-content: space-between; cursor: pointer; }
-        .item-list { padding: 10px 20px; }
-        .item { display: flex; align-items: flex-start; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #e5e7eb; }
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-main); line-height: 1.5; padding-bottom: 40px; }
+        
+        /* Header & Tabs */
+        header { background: var(--surface); padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        h1 { text-align: center; font-size: 1.5rem; font-weight: 700; background: linear-gradient(to right, #4f46e5, #ec4899); -webkit-background-clip: text; color: transparent; margin-bottom: 15px; }
+        .tabs { display: flex; justify-content: center; gap: 10px; max-width: 600px; margin: 0 auto; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: #f1f5f9; color: var(--text-muted); font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 0.95rem; }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3); }
+
+        .container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
+        
+        /* Search & Filter */
+        .search-bar { width: 100%; padding: 12px 15px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; margin-bottom: 20px; outline: none; transition: 0.2s; }
+        .search-bar:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+
+        /* Category Section */
+        .category { background: var(--surface); border-radius: 12px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid var(--border); overflow: hidden; }
+        .cat-header { padding: 12px 16px; background: #f8fafc; font-weight: 600; font-size: 1.05rem; border-bottom: 1px solid var(--border); color: #334155; }
+        
+        /* Items List */
+        .item { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 16px; border-bottom: 1px solid var(--border); transition: background 0.1s; }
         .item:last-child { border-bottom: none; }
-        .item-left { display: flex; gap: 15px; flex: 1; }
-        .item input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; margin-top: 2px; accent-color: var(--primary); }
-        .item-info { flex: 1; }
-        .item-name { font-weight: 500; font-size: 1.05rem; display: block; margin-bottom: 4px; }
-        .item-desc { font-size: 0.85rem; color: #6b7280; margin-bottom: 6px; display: block; }
-        .checked .item-name, .checked .item-desc { text-decoration: line-through; color: #9ca3af; }
+        .item:hover { background: #f8fafc; }
         
-        .badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 600; display: inline-block; }
-        .badge.balo { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-        .badge.v24 { background: #ffedd5; color: #c2410c; border: 1px solid #fdba74; }
-        .badge.v28 { background: #e0e7ff; color: #3730a3; border: 1px solid #a5b4fc; }
-        .badge.phone { background: #f3e8ff; color: #6b21a8; border: 1px solid #d8b4fe; }
+        .item-info { flex: 1; padding-right: 15px; }
+        .item-title { font-weight: 500; font-size: 1rem; color: var(--text-main); margin-bottom: 4px; display: block; }
+        .item-desc { font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px; }
         
-        .delete-btn { background: #ef4444; color: white; padding: 6px 10px; font-size: 12px; border-radius: 6px; cursor: pointer; border: none; }
-        
-        #progressBarContainer { width: 100%; background: #e5e7eb; height: 12px; border-radius: 10px; overflow: hidden; margin-top: 15px; }
-        #progressBar { height: 100%; background: var(--primary); width: 0%; transition: 0.3s; }
+        /* Tags Styling - Modern & Compact */
+        .tags-container { display: flex; flex-wrap: wrap; gap: 6px; }
+        .tag { font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .tag-balo { background: #e0e7ff; color: #3730a3; } /* Indigo for Carry-on */
+        .tag-vali { background: #f3e8ff; color: #6b21a8; } /* Purple for Checked */
+        .tag-warn { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; } /* Red for Customs */
+        .tag-liquid { background: #e0f2fe; color: #0369a1; } /* Blue for Liquid */
+        .tag-tech { background: #dcfce7; color: #15803d; } /* Green for Digital/Setup */
+
+        /* Buttons & Actions */
+        .btn-add { background: var(--bg); border: 1px solid var(--border); color: var(--primary); width: 32px; height: 32px; border-radius: 8px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; }
+        .btn-add:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn-remove { background: #fee2e2; color: var(--danger); border: none; width: 32px; height: 32px; border-radius: 8px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; }
+        .btn-remove:hover { background: var(--danger); color: white; }
+
+        /* Checklist specific */
+        .checkbox-wrapper { display: flex; align-items: flex-start; gap: 12px; }
+        input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--success); cursor: pointer; }
+        .checked .item-title, .checked .item-desc { text-decoration: line-through; color: #94a3b8; }
+        .checked .tag { opacity: 0.5; }
+
+        /* Progress Bar */
+        .progress-container { margin: 20px 0; background: var(--surface); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
+        .progress-text { display: flex; justify-content: space-between; font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; }
+        .progress-bar { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--success); width: 0%; transition: width 0.3s ease; }
+
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <h1>🧳 Universal Packing Database v3.0</h1>
-    <p class="subtitle">Bao gồm Checklist Đồ dùng & Hành trang Kỹ thuật số</p>
-
-    <div class="dashboard">
-        <div class="card">
-            <h3>Tiến độ đóng gói</h3>
-            <div style="font-size: 2rem; font-weight: bold; color: var(--primary);" id="progressText">0 / 0</div>
-            <div id="progressBarContainer"><div id="progressBar"></div></div>
+    <header>
+        <h1>Packify - Hành Trang Đi Học</h1>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('db')" id="btn-db">🛒 Kho Đồ</button>
+            <button class="tab-btn" onclick="switchTab('list')" id="btn-list">🧳 Vali Của Tôi</button>
         </div>
-        <div class="card">
-            <h3>Lọc theo vị trí / Kiện hàng</h3>
-            <select id="filterLocation" style="width: 100%; margin-top: 10px;" onchange="render()">
-                <option value="all">🌍 Hiển thị tất cả mọi thứ</option>
-                <option value="Điện thoại/Digital">📱 Điện thoại / Digital (Cài đặt trước)</option>
-                <option value="Balo">🎒 Balo xách tay (Giấy tờ, Đồ quý)</option>
-                <option value="Vali 24">🧳 Vali 24 inch (Đồ nặng, Đồ ăn, Chất lỏng)</option>
-                <option value="Vali 28">📦 Vali 28 inch (Quần áo, Đồ cồng kềnh, Nhẹ)</option>
-            </select>
-        </div>
-    </div>
+    </header>
 
-    <div class="card" style="margin-bottom: 20px;">
-        <h3>➕ Thêm item vĩ mô của riêng bạn</h3>
-        <div class="add-form">
-            <input type="text" id="newItemName" placeholder="Tên đồ vật / Việc cần làm...">
-            <input type="text" id="newItemDesc" placeholder="Ghi chú (Không bắt buộc)...">
-            <select id="newItemCat">
-                <option value="Hành trang Digital & Mạng">Digital & Mạng</option>
-                <option value="Đồ ăn & Thức uống">Đồ ăn & Thức uống</option>
-                <option value="Giấy tờ & Tài chính">Giấy tờ & Tài chính</option>
-                <option value="Sinh hoạt & Cá nhân">Sinh hoạt & Cá nhân</option>
-                <option value="Quần áo & Phụ kiện">Quần áo & Phụ kiện</option>
-                <option value="Điện tử & Sở thích">Điện tử & Công nghệ</option>
-                <option value="Y tế & Thuốc">Y tế & Thuốc</option>
-            </select>
-            <select id="newItemLoc">
-                <option value="Vali 28">Vali 28 (Nhẹ/To)</option>
-                <option value="Vali 24">Vali 24 (Nặng/Nhỏ)</option>
-                <option value="Balo">Balo (Xách tay)</option>
-                <option value="Điện thoại/Digital">Điện thoại/Cài đặt</option>
-            </select>
-            <button onclick="addItem()">Lưu Database</button>
+    <div class="container">
+        <div id="view-db">
+            <input type="text" class="search-bar" id="searchInput" placeholder="Tìm kiếm đồ vật... (VD: Sạc, Giấy tờ, Mì)" onkeyup="renderDB()">
+            <div id="db-content"></div>
+        </div>
+
+        <div id="view-list" class="hidden">
+            <div class="progress-container">
+                <div class="progress-text">
+                    <span>Tiến độ đóng gói</span>
+                    <span id="progress-count">0/0 Hoàn thành</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+            </div>
+            <div id="list-content"></div>
         </div>
     </div>
-
-    <div id="databaseContainer"></div>
 
     <script>
-        const defaultDatabase = [
-            // HÀNH TRANG DIGITAL & MẠNG (Xử lý trước khi bay)
-            { id: 'dig1', name: 'Mua Sim 4G Trung Quốc / eSIM', desc: 'Mua ở VN, loại có sẵn VPN vượt tường lửa dùng cho 10 ngày đầu.', category: 'Hành trang Digital & Mạng', location: 'Điện thoại/Digital' },
-            { id: 'dig2', name: 'Cài đặt VPN (Clash / V2ray / Shadowrocket)', desc: 'Bắt buộc cài trên điện thoại Vivo và Laptop trước khi bay. Mua sẵn gói mạng.', category: 'Hành trang Digital & Mạng', location: 'Điện thoại/Digital' },
-            { id: 'dig3', name: 'Cài App Thanh toán: Alipay, WeChat', desc: 'Xác thực hộ chiếu sẵn, liên kết thẻ Visa/Mastercard (nếu có).', category: 'Hành trang Digital & Mạng', location: 'Điện thoại/Digital' },
-            { id: 'dig4', name: 'Cài App Bản đồ: Gaode Ditu / Baidu Maps', desc: 'Google Maps bên đó sai số rất nhiều, bắt buộc dùng app nội địa.', category: 'Hành trang Digital & Mạng', location: 'Điện thoại/Digital' },
-            { id: 'dig5', name: 'Cập nhật Game (Genshin Impact, v.v.)', desc: 'Tải trước data update qua Wifi ở VN, sang đó tải bằng 4G rất xót tiền.', category: 'Hành trang Digital & Mạng', location: 'Điện thoại/Digital' },
-            { id: 'dig6', name: 'Tải sẵn phim / Tiểu thuyết / Truyện', desc: 'Tải các bộ truyện ABO, Bách hợp ưa thích về máy đọc offline lúc cách ly/chờ tàu xe.', category: 'Hành trang Digital & Mạng', location: 'Điện thoại/Digital' },
-            { id: 'dig7', name: 'Backup Scripts Tampermonkey', desc: 'Xuất file các script đang dùng trên web để sang đó add lại vào trình duyệt mới nếu cần.', category: 'Hành trang Digital & Mạng', location: 'Điện thoại/Digital' },
+        // Core Data - Cập nhật cực kỳ chi tiết, tag xịn
+        const masterData = [
+            // CÔNG NGHỆ & ĐIỆN TỬ
+            { id: 't1', cat: 'Công nghệ & Điện tử', name: 'Sạc dự phòng Cuktech 25 SE 25000mAh', desc: '92.5Wh - Hợp lệ bay. Phải in rõ dung lượng.', tags: ['Xách tay', 'Hải quan check'] },
+            { id: 't2', cat: 'Công nghệ & Điện tử', name: 'Điện thoại (Cài sẵn VPN)', desc: 'Cài sẵn V2ray/Clash mua gói mạng VN.', tags: ['Xách tay', 'Setup trước'] },
+            { id: 't3', cat: 'Công nghệ & Điện tử', name: 'Laptop & Cục sạc', desc: 'Bỏ balo qua cửa an ninh phải bỏ ra khay riêng.', tags: ['Xách tay', 'Hải quan check'] },
+            { id: 't4', cat: 'Công nghệ & Điện tử', name: 'Cáp sạc Type-C to C / USB-A', desc: 'Mang dư 2 sợi phòng đứt ngầm.', tags: ['Xách tay/Ký gửi'] },
+            { id: 't5', cat: 'Công nghệ & Điện tử', name: 'Ổ cắm điện kéo dài (Lioa)', desc: 'Rất cần vì phòng trọ ít ổ cắm.', tags: ['Ký gửi'] },
+            { id: 't6', cat: 'Công nghệ & Điện tử', name: 'Phích chuyển đổi 3 chấu chéo', desc: 'Ổ cắm tường TQ toàn loại 3 chấu chéo.', tags: ['Xách tay/Ký gửi'] },
+            { id: 't7', cat: 'Công nghệ & Điện tử', name: 'Sò lạnh / Quạt tản nhiệt điện thoại', desc: 'Để cày game mượt không chai pin.', tags: ['Xách tay/Ký gửi'] },
+            { id: 't8', cat: 'Công nghệ & Điện tử', name: 'Tai nghe TWS / Có dây', desc: 'Chống ồn lúc đi tàu xe, máy bay.', tags: ['Xách tay'] },
 
-            // ĐỒ ĂN & THỨC UỐNG
-            { id: 'f1', name: 'Mì gói / Phở / Miến ăn liền (10 gói)', desc: 'Cứu đói lúc nửa đêm hoặc khi đồ ăn ở canteen quá dầu mỡ/cay.', category: 'Đồ ăn & Thức uống', location: 'Vali 24' },
-            { id: 'f2', name: 'Ruốc heo / Bò khô (Hút chân không KỸ)', desc: 'Hải quan đôi khi làm khó đồ thịt, nhớ hút chân không không nhãn mác kỹ.', category: 'Đồ ăn & Thức uống', location: 'Vali 24' },
-            { id: 'f3', name: 'Cà phê gói (G7, Trung Nguyên)', desc: 'Bên Trung chuộng trà, cafe khá nhạt và đắt. Mang theo nếu hay buồn ngủ.', category: 'Đồ ăn & Thức uống', location: 'Vali 24' },
-            { id: 'f4', name: 'Gia vị Việt: Bột canh / Muối Hảo Hảo', desc: 'Chấm hoa quả, nêm nếm đồ ăn những ngày nhớ vị Việt Nam.', category: 'Đồ ăn & Thức uống', location: 'Vali 24' },
-            { id: 'f5', name: 'Tương ớt Chinsu / Nam Ngư mini', desc: 'Tùy khẩu vị, nếu không quen vị xì dầu/hắc xì dầu Trung.', category: 'Đồ ăn & Thức uống', location: 'Vali 24' },
-            { id: 'f6', name: 'Kẹo ngậm ho / Kẹo cao su', desc: 'Dùng lúc đi máy bay chống ù tai hoặc thời tiết khô lạnh.', category: 'Đồ ăn & Thức uống', location: 'Balo' },
-            { id: 'f7', name: 'Chai nước lọc nhỏ (Mua ở sảnh chờ)', desc: 'Uống trên máy bay và lúc vừa hạ cánh lỉnh kỉnh đồ đạc chưa kịp mua nước.', category: 'Đồ ăn & Thức uống', location: 'Balo' },
+            // DIGITAL LIFESTYLE (Setup trước bay)
+            { id: 'd1', cat: 'Digital & App', name: 'App Alipay & WeChat', desc: 'Xác thực hộ chiếu sẵn từ nhà.', tags: ['Setup trước', 'Tài chính'] },
+            { id: 'd2', cat: 'Digital & App', name: 'App Bản đồ TQ (Gaode/Baidu Maps)', desc: 'Google Maps không dùng được.', tags: ['Setup trước'] },
+            { id: 'd3', cat: 'Digital & App', name: 'Update Game (Genshin...)', desc: 'Tải trước data ở nhà cho đỡ tốn 4G/Wifi yếu.', tags: ['Setup trước'] },
+            { id: 'd4', cat: 'Digital & App', name: 'Tải Tiểu thuyết Bách hợp / ABO', desc: 'Lưu offline đọc lúc chờ tàu, trên máy bay.', tags: ['Setup trước'] },
+            { id: 'd5', cat: 'Digital & App', name: 'Backup Script Tampermonkey', desc: 'Xuất file code lưu lên Drive dự phòng.', tags: ['Setup trước'] },
 
             // GIẤY TỜ
-            { id: 'g1', name: 'Hộ chiếu (còn hạn dài) + Visa X2', desc: 'Chụp lại ảnh lưu trên điện thoại/Google Drive dự phòng.', category: 'Giấy tờ & Tài chính', location: 'Balo' },
-            { id: 'g2', name: 'Thư báo trúng tuyển Giang Nam (Gốc + Photo)', desc: 'Dùng để nhập học và trình hải quan.', category: 'Giấy tờ & Tài chính', location: 'Balo' },
-            { id: 'g3', name: 'Form JW202/DQ (Gốc + Photo)', desc: 'Giấy tờ bắt buộc với du học sinh.', category: 'Giấy tờ & Tài chính', location: 'Balo' },
-            { id: 'g4', name: 'Ảnh thẻ (Phông trắng + Xanh)', desc: 'Chuẩn bị 10 tấm 3x4, 10 tấm 4x6.', category: 'Giấy tờ & Tài chính', location: 'Balo' },
-            { id: 'g5', name: 'Tiền mặt NDT (Có đổi tiền lẻ)', desc: 'Đổi khoảng 2000-3000 tệ cầm tay, nhớ có tờ 10, 20 tệ để đi taxi, nạp thẻ.', category: 'Giấy tờ & Tài chính', location: 'Balo' },
-            { id: 'g6', name: 'Thẻ Visa / Mastercard', desc: 'Dự phòng trường hợp Alipay chưa liên kết được.', category: 'Giấy tờ & Tài chính', location: 'Balo' },
-            { id: 'g7', name: 'Bút bi đen/xanh', desc: 'Rất hay cần để điền tờ khai nhập cảnh trên máy bay.', category: 'Giấy tờ & Tài chính', location: 'Balo' },
+            { id: 'g1', cat: 'Giấy tờ & Tài chính', name: 'Hộ chiếu Gốc & Visa X2', desc: 'Giấy tờ sinh tử.', tags: ['Xách tay', 'Quan trọng'] },
+            { id: 'g2', cat: 'Giấy tờ & Tài chính', name: 'Thư báo trúng tuyển (Gốc+Photo)', desc: 'Trình hải quan nếu bị hỏi.', tags: ['Xách tay'] },
+            { id: 'g3', cat: 'Giấy tờ & Tài chính', name: 'Form JW202 / DQ', desc: 'Bắt buộc với du học sinh.', tags: ['Xách tay'] },
+            { id: 'g4', cat: 'Giấy tờ & Tài chính', name: 'Tiền mặt NDT', desc: 'Có tờ 10, 20 tệ lẻ để tiêu ban đầu.', tags: ['Xách tay', 'Tài chính'] },
+            { id: 'g5', cat: 'Giấy tờ & Tài chính', name: 'Ảnh thẻ 3x4 & 4x6', desc: 'Phông trắng/xanh, mang nhiều.', tags: ['Xách tay'] },
 
-            // ĐIỆN TỬ
-            { id: 'e1', name: 'Laptop + Cục sạc', desc: 'Bảo quản cẩn thận trong balo chống sốc.', category: 'Điện tử & Sở thích', location: 'Balo' },
-            { id: 'e2', name: 'Sạc dự phòng (Dưới 20000mAh)', desc: 'BẮT BUỘC để trong Balo xách tay, không được ký gửi.', category: 'Điện tử & Sở thích', location: 'Balo' },
-            { id: 'e3', name: 'Điện thoại phụ (nếu có)', desc: 'Dùng để lắp sim VN nhận OTP ngân hàng.', category: 'Điện tử & Sở thích', location: 'Balo' },
-            { id: 'e4', name: 'Phích cắm chuyển đổi 3 chấu chéo', desc: 'Mang 1-2 cục, ổ cắm tường TQ toàn loại này.', category: 'Điện tử & Sở thích', location: 'Vali 24' },
-            { id: 'e5', name: 'Ổ điện kéo dài (Lioa/Điện Quang)', desc: 'Đỡ phải lúi húi cắm sạc góc tường.', category: 'Điện tử & Sở thích', location: 'Vali 24' },
-            { id: 'e6', name: 'Tai nghe + Cáp sạc dự phòng', desc: 'Cáp type-C mang dư ra 1 sợi lỡ đứt.', category: 'Điện tử & Sở thích', location: 'Balo' },
+            // ĐỒ ĂN
+            { id: 'f1', cat: 'Đồ ăn (Cứu đói)', name: 'Mì gói / Phở ăn liền (10 gói)', desc: 'Chèn vào các khe hở trong vali 24.', tags: ['Ký gửi'] },
+            { id: 'f2', cat: 'Đồ ăn (Cứu đói)', name: 'Ruốc heo / Bò khô', desc: 'Hút chân không, bóc nhãn mác.', tags: ['Ký gửi', 'Hải quan check'] },
+            { id: 'f3', cat: 'Đồ ăn (Cứu đói)', name: 'Cà phê hòa tan (G7/Trung Nguyên)', desc: 'TQ chuộng trà, ít uống cafe sữa đá.', tags: ['Ký gửi'] },
+            { id: 'f4', cat: 'Đồ ăn (Cứu đói)', name: 'Bột canh Hảo Hảo / Tương ớt', desc: 'Chấm hoa quả, gia vị quen thuộc.', tags: ['Ký gửi'] },
 
-            // SINH HOẠT CÁ NHÂN
-            { id: 's1', name: 'Băng vệ sinh (Đủ dùng 3 tháng)', desc: 'Cho vào vali 28 inch vì to, nhẹ, chống sốc tốt cho đồ khác.', category: 'Sinh hoạt & Cá nhân', location: 'Vali 28' },
-            { id: 's2', name: 'Skincare (Tẩy trang, SRM, Toner, Kem chống nắng)', desc: 'Mang full-size đang dùng, chèn kỹ chống vỡ bọc trong nilon zip.', category: 'Sinh hoạt & Cá nhân', location: 'Vali 24' },
-            { id: 's3', name: 'Bộ chiết Sữa tắm, Dầu gội (100ml)', desc: 'Mang đủ dùng 1 tuần đầu, ổn định rồi mua chai lớn ở siêu thị nội địa.', category: 'Sinh hoạt & Cá nhân', location: 'Vali 24' },
-            { id: 's4', name: 'Bàn chải, Tuýp kem đánh răng nhỏ', desc: 'Để trong túi zip dễ lấy.', category: 'Sinh hoạt & Cá nhân', location: 'Vali 24' },
-            { id: 's5', name: 'Đồ cắt móng tay, Nhíp, Kim chỉ', desc: 'Những thứ rất nhỏ nhưng hay quên và khó tìm mua ngay.', category: 'Sinh hoạt & Cá nhân', location: 'Vali 24' },
-            { id: 's6', name: 'Khăn mặt, Khăn tắm', desc: 'Nên mang 2 khăn mặt, 1 khăn tắm.', category: 'Sinh hoạt & Cá nhân', location: 'Vali 28' },
-            { id: 's7', name: 'Cuộn giấy vệ sinh + Khăn ướt', desc: 'Cực kỳ quan trọng lúc vừa vào phòng trọ/KTX trống không.', category: 'Sinh hoạt & Cá nhân', location: 'Vali 24' },
-            { id: 's8', name: 'Ô/Dù che nắng mưa, gấp gọn', desc: 'Thời tiết mùa hè Vô Tích nắng gắt và hay mưa.', category: 'Sinh hoạt & Cá nhân', location: 'Vali 28' },
-            { id: 's9', name: 'Bình giữ nhiệt nhỏ', desc: 'Bên TQ có văn hóa uống nước ấm ở mọi nơi.', category: 'Sinh hoạt & Cá nhân', location: 'Balo' },
-
-            // QUẦN ÁO (Tập trung mùa xuân - hè Vô Tích)
-            { id: 'c1', name: 'Áo khoác gió / Áo hoodie', desc: 'Mặc đi đường và những ngày tháng 3 còn se lạnh.', category: 'Quần áo & Phụ kiện', location: 'Vali 28' },
-            { id: 'c2', name: 'Áo thun / Sơ mi (7-10 cái)', desc: 'Đồ mặc đi học hàng ngày cho mùa hè.', category: 'Quần áo & Phụ kiện', location: 'Vali 28' },
-            { id: 'c3', name: 'Quần dài (Jeans/Kaki/Ống rộng)', desc: 'Mang 3-4 cái.', category: 'Quần áo & Phụ kiện', location: 'Vali 28' },
-            { id: 'c4', name: 'Quần short / Váy / Đồ mặc nhà', desc: 'Mùa hè bên đó khá nóng.', category: 'Quần áo & Phụ kiện', location: 'Vali 28' },
-            { id: 'c5', name: 'Đồ lót (10-15 bộ)', desc: 'Khuyên mang nhiều để không phải giặt liên tục những ngày đầu bận rộn.', category: 'Quần áo & Phụ kiện', location: 'Vali 28' },
-            { id: 'c6', name: 'Tất/Vớ (7-10 đôi)', desc: 'Cuộn tròn nhét vào trong lòng giày để tiết kiệm diện tích.', category: 'Quần áo & Phụ kiện', location: 'Vali 28' },
-            { id: 'c7', name: 'Giày Thể thao / Sneaker', desc: 'Mang 1 đôi đi ở VN, 1 đôi để trong vali.', category: 'Quần áo & Phụ kiện', location: 'Vali 28' },
-            { id: 'c8', name: 'Dép lê đi trong nhà', desc: 'Nhựa dẻo, đi được vào nhà tắm.', category: 'Quần áo & Phụ kiện', location: 'Vali 28' },
+            // SINH HOẠT - MỸ PHẨM
+            { id: 's1', cat: 'Sinh hoạt & Cá nhân', name: 'Băng vệ sinh / Cốc nguyệt san', desc: 'Mang 3 bịch, lót xung quanh vali chống sốc.', tags: ['Ký gửi', 'Cồng kềnh nhẹ'] },
+            { id: 's2', cat: 'Sinh hoạt & Cá nhân', name: 'Skincare quen thuộc (Sửa rửa mặt, Toner...)', desc: 'Tránh sốc nhiệt đới gây mụn.', tags: ['Ký gửi', 'Chất lỏng'] },
+            { id: 's3', cat: 'Sinh hoạt & Cá nhân', name: 'Bộ chiết mỹ phẩm (100ml)', desc: 'Dầu gội, sữa tắm dùng 1 tuần đầu.', tags: ['Ký gửi/Xách tay', 'Chất lỏng'] },
+            { id: 's4', cat: 'Sinh hoạt & Cá nhân', name: 'Bông tẩy trang', desc: 'Nhẹ nhưng tốn diện tích.', tags: ['Ký gửi'] },
+            { id: 's5', cat: 'Sinh hoạt & Cá nhân', name: 'Kim chỉ, Nhíp, Cắt móng tay', desc: 'Cắt móng tay/Kéo nhỏ BẮT BUỘC ký gửi.', tags: ['Ký gửi', 'Hải quan cấm xách tay'] },
+            { id: 's6', cat: 'Sinh hoạt & Cá nhân', name: 'Khăn mặt, Khăn tắm', desc: 'Nên mang 2 khăn mặt.', tags: ['Ký gửi'] },
+            { id: 's7', cat: 'Sinh hoạt & Cá nhân', name: 'Bàn chải, Kem đánh răng', desc: 'Để chỗ dễ lấy trong vali.', tags: ['Ký gửi'] },
 
             // Y TẾ
-            { id: 'y1', name: 'Thuốc Hạ sốt / Cảm cúm (Panadol/Decolgen)', desc: 'Cực kỳ cần thiết vì mới sang dễ ốm do thay đổi thời tiết.', category: 'Y tế & Thuốc', location: 'Vali 24' },
-            { id: 'y2', name: 'Men tiêu hóa / Thuốc đau bụng (Berberin)', desc: 'Đồ ăn bên đó nhiều dầu mỡ, dễ đau bụng.', category: 'Y tế & Thuốc', location: 'Vali 24' },
-            { id: 'y3', name: 'Thuốc dị ứng (thời tiết / thức ăn)', desc: 'Rất cần nếu bạn có cơ địa mẫn cảm.', category: 'Y tế & Thuốc', location: 'Vali 24' },
-            { id: 'y4', name: 'Băng cá nhân (Urgo), Dầu gió, Povidine', desc: 'Xử lý xây xát nhẹ.', category: 'Y tế & Thuốc', location: 'Vali 24' }
+            { id: 'y1', cat: 'Y tế & Tủ thuốc', name: 'Thuốc hạ sốt, cảm cúm (Panadol)', desc: 'Cần thiết khi thay đổi thời tiết.', tags: ['Ký gửi'] },
+            { id: 'y2', cat: 'Y tế & Tủ thuốc', name: 'Thuốc tiêu hóa, Berberin', desc: 'Đồ ăn TQ nhiều dầu mỡ, cay nóng.', tags: ['Ký gửi'] },
+            { id: 'y3', cat: 'Y tế & Tủ thuốc', name: 'Băng cá nhân (Urgo), Dầu gió', desc: 'Xử lý xây xát, côn trùng.', tags: ['Ký gửi'] },
+
+            // QUẦN ÁO
+            { id: 'c1', cat: 'Quần áo & Giày dép', name: 'Áo khoác ấm (Tháng 3 lạnh)', desc: 'Mặc đi đường luôn cho đỡ tốn chỗ.', tags: ['Xách tay'] },
+            { id: 'c2', cat: 'Quần áo & Giày dép', name: 'Áo thun, Đồ mùa hè', desc: 'Tháng 5-7 sẽ rất nóng.', tags: ['Ký gửi vali 28'] },
+            { id: 'c3', cat: 'Quần áo & Giày dép', name: 'Quần dài, Jeans', desc: 'Mang 3-4 cái thay đổi.', tags: ['Ký gửi vali 28'] },
+            { id: 'c4', cat: 'Quần áo & Giày dép', name: 'Đồ lót (10-15 bộ), Tất', desc: 'Cuộn nhét vào trong giày tiết kiệm chỗ.', tags: ['Ký gửi vali 28'] },
+            { id: 'c5', cat: 'Quần áo & Giày dép', name: 'Sneaker & Dép lê', desc: 'Dép lê đi trong nhà trọ.', tags: ['Ký gửi vali 28'] }
         ];
 
-        let db = JSON.parse(localStorage.getItem('myLifeDbV3')) || defaultDatabase;
-        let checkedState = JSON.parse(localStorage.getItem('myCheckedStateV3')) || {};
+        let myList = JSON.parse(localStorage.getItem('packify_list')) || [];
 
-        function render() {
-            const container = document.getElementById('databaseContainer');
-            const filterLoc = document.getElementById('filterLocation').value;
+        function getTagClass(tag) {
+            if(tag.includes('Xách tay')) return 'tag-balo';
+            if(tag.includes('Ký gửi')) return 'tag-vali';
+            if(tag.includes('Hải quan')) return 'tag-warn';
+            if(tag.includes('Chất lỏng')) return 'tag-liquid';
+            if(tag.includes('Setup') || tag.includes('Tài chính')) return 'tag-tech';
+            return 'tag-vali';
+        }
+
+        function switchTab(tab) {
+            document.getElementById('view-db').classList.toggle('hidden', tab !== 'db');
+            document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
+            document.getElementById('btn-db').classList.toggle('active', tab === 'db');
+            document.getElementById('btn-list').classList.toggle('active', tab === 'list');
+            if(tab === 'db') renderDB();
+            if(tab === 'list') renderList();
+        }
+
+        function renderDB() {
+            const container = document.getElementById('db-content');
+            const search = document.getElementById('searchInput').value.toLowerCase();
             container.innerHTML = '';
 
-            const categories = [...new Set(db.map(item => item.category))];
-            let total = 0, checked = 0;
-
+            const categories = [...new Set(masterData.map(i => i.cat))];
+            
             categories.forEach(cat => {
-                const itemsInCat = db.filter(item => item.category === cat && (filterLoc === 'all' || item.location === filterLoc));
-                if (itemsInCat.length === 0) return;
+                const items = masterData.filter(i => i.cat === cat && (i.name.toLowerCase().includes(search) || i.tags.join(' ').toLowerCase().includes(search)));
+                if(items.length === 0) return;
 
-                const catDiv = document.createElement('div');
-                catDiv.className = 'category';
-                
-                // Toggle list visibility logic
-                const headerId = 'header_' + cat.replace(/\s+/g, '');
-                catDiv.innerHTML = `<div class="category-header" onclick="toggleCat('${headerId}')">${cat} <span>▼</span></div>`;
-                
-                const listDiv = document.createElement('div');
-                listDiv.className = 'item-list';
-                listDiv.id = headerId;
+                let html = `<div class="category"><div class="cat-header">${cat}</div>`;
+                items.forEach(item => {
+                    const isInList = myList.some(x => x.id === item.id);
+                    const tagHtml = item.tags.map(t => `<span class="tag ${getTagClass(t)}">${t}</span>`).join('');
+                    
+                    html += `
+                        <div class="item">
+                            <div class="item-info">
+                                <span class="item-title">${item.name}</span>
+                                <span class="item-desc">${item.desc}</span>
+                                <div class="tags-container">${tagHtml}</div>
+                            </div>
+                            ${isInList 
+                                ? `<button class="btn-remove" onclick="removeFromList('${item.id}')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></button>` 
+                                : `<button class="btn-add" onclick="addToList('${item.id}')">+</button>`}
+                        </div>`;
+                });
+                html += `</div>`;
+                container.innerHTML += html;
+            });
+        }
 
-                itemsInCat.forEach(item => {
-                    total++;
-                    const isChecked = checkedState[item.id] || false;
-                    if (isChecked) checked++;
+        function renderList() {
+            const container = document.getElementById('list-content');
+            container.innerHTML = '';
+            
+            if(myList.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 40px;">Vali trống. Hãy sang tab Kho Đồ để thêm item nhé!</div>';
+                updateProgress();
+                return;
+            }
 
-                    let badgeClass = '';
-                    if(item.location === 'Balo') badgeClass = 'balo';
-                    else if(item.location === 'Vali 24') badgeClass = 'v24';
-                    else if(item.location === 'Vali 28') badgeClass = 'v28';
-                    else badgeClass = 'phone';
-
-                    listDiv.innerHTML += `
-                        <div class="item ${isChecked ? 'checked' : ''}">
-                            <div class="item-left">
-                                <input type="checkbox" id="${item.id}" ${isChecked ? 'checked' : ''} onchange="toggle('${item.id}')">
+            const categories = [...new Set(myList.map(i => i.cat))];
+            
+            categories.forEach(cat => {
+                const items = myList.filter(i => i.cat === cat);
+                let html = `<div class="category"><div class="cat-header">${cat}</div>`;
+                items.forEach(item => {
+                    const tagHtml = item.tags.map(t => `<span class="tag ${getTagClass(t)}">${t}</span>`).join('');
+                    html += `
+                        <div class="item ${item.checked ? 'checked' : ''}">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck('${item.id}')">
                                 <div class="item-info">
-                                    <label for="${item.id}" class="item-name">${item.name}</label>
-                                    ${item.desc ? `<span class="item-desc">${item.desc}</span>` : ''}
-                                    <span class="badge ${badgeClass}">${item.location}</span>
+                                    <span class="item-title">${item.name}</span>
+                                    <span class="item-desc">${item.desc}</span>
+                                    <div class="tags-container">${tagHtml}</div>
                                 </div>
                             </div>
-                            ${!defaultDatabase.find(d => d.id === item.id) ? `<button class="delete-btn" onclick="deleteItem('${item.id}')">Xóa</button>` : ''}
-                        </div>
-                    `;
+                            <button class="btn-remove" onclick="removeFromList('${item.id}')">×</button>
+                        </div>`;
                 });
-                catDiv.appendChild(listDiv);
-                container.appendChild(catDiv);
+                html += `</div>`;
+                container.innerHTML += html;
             });
-
-            document.getElementById('progressText').innerText = `${checked} / ${total}`;
-            const percent = total === 0 ? 0 : Math.round((checked/total)*100);
-            document.getElementById('progressBar').style.width = percent + '%';
+            updateProgress();
         }
 
-        function toggleCat(id) {
-            const el = document.getElementById(id);
-            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        function addToList(id) {
+            const item = masterData.find(i => i.id === id);
+            if(item && !myList.some(i => i.id === id)) {
+                myList.push({...item, checked: false});
+                saveData();
+                renderDB();
+            }
         }
 
-        function toggle(id) {
-            checkedState[id] = !checkedState[id];
-            localStorage.setItem('myCheckedStateV3', JSON.stringify(checkedState));
-            render();
+        function removeFromList(id) {
+            myList = myList.filter(i => i.id !== id);
+            saveData();
+            renderDB();
+            renderList();
         }
 
-        function addItem() {
-            const name = document.getElementById('newItemName').value.trim();
-            const desc = document.getElementById('newItemDesc').value.trim();
-            if (!name) return alert('Bạn ơi chưa nhập tên đồ vật kìa!');
+        function toggleCheck(id) {
+            const item = myList.find(i => i.id === id);
+            if(item) {
+                item.checked = !item.checked;
+                saveData();
+                renderList();
+            }
+        }
+
+        function updateProgress() {
+            const total = myList.length;
+            const checked = myList.filter(i => i.checked).length;
+            const percent = total === 0 ? 0 : Math.round((checked / total) * 100);
             
-            const cat = document.getElementById('newItemCat').value;
-            const loc = document.getElementById('newItemLoc').value;
-            
-            const newItem = { id: 'custom_' + Date.now(), name: name, desc: desc, category: cat, location: loc };
-            db.push(newItem);
-            localStorage.setItem('myLifeDbV3', JSON.stringify(db));
-            
-            document.getElementById('newItemName').value = '';
-            document.getElementById('newItemDesc').value = '';
-            render();
+            document.getElementById('progress-count').innerText = `${checked}/${total} Hoàn thành`;
+            document.getElementById('progress-fill').style.width = `${percent}%`;
         }
 
-        function deleteItem(id) {
-            if(!confirm('Xóa thật không?')) return;
-            db = db.filter(item => item.id !== id);
-            delete checkedState[id];
-            localStorage.setItem('myLifeDbV3', JSON.stringify(db));
-            localStorage.setItem('myCheckedStateV3', JSON.stringify(checkedState));
-            render();
+        function saveData() {
+            localStorage.setItem('packify_list', JSON.stringify(myList));
         }
 
-        render();
+        // Init
+        renderDB();
     </script>
 </body>
 </html>
