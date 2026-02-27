@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Packify Pro v9 - Auto Sync</title>
+    <title>Packify Pro v10</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -14,15 +14,24 @@
         }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         
+        /* Chỉnh lại thẻ và nền swipe */
+        .card-wrapper { position: relative; border-radius: 16px; margin-bottom: 12px; }
+        .swipe-bg { 
+            position: absolute; inset: 0; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
+            padding: 0 20px; color: white; font-size: 24px; z-index: 0;
+        }
+        .swipe-bg-left { background-color: #10b981; opacity: 0; transition: opacity 0.2s; border-radius: 16px 0 0 16px; width: 50%; display: flex; align-items: center; justify-content: flex-start; }
+        .swipe-bg-right { background-color: #f97316; opacity: 0; transition: opacity 0.2s; border-radius: 0 16px 16px 0; width: 50%; display: flex; align-items: center; justify-content: flex-end; position: absolute; right: 0; top: 0; bottom: 0; }
+        
         .tg-card { 
             background-color: var(--tg-card); border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             position: relative; overflow: hidden; touch-action: pan-y; transition: transform 0.2s, opacity 0.2s, background-color 0.3s;
+            z-index: 10; width: 100%; cursor: grab;
         }
-        .tg-card.swiping-left { transform: translateX(-30px); opacity: 0.8; }
-        .tg-card.swiping-right { transform: translateX(30px); opacity: 0.8; }
-        
-        /* Đổi màu cực nổi bật khi tick ở Vali */
-        .tg-card.vali-checked { background-color: #f1f5f9; border: 2px dashed #cbd5e1; opacity: 0.6; filter: grayscale(80%); }
+        .tg-card:active { cursor: grabbing; }
+        .tg-card.swiping-left { transform: translateX(-60px); opacity: 0.9; }
+        .tg-card.swiping-right { transform: translateX(60px); opacity: 0.9; }
+        .tg-card.vali-checked { background-color: #f8fafc; border: 2px dashed #cbd5e1; opacity: 0.7; filter: grayscale(50%); }
 
         .bg-icon { position: absolute; right: -10px; bottom: -15px; font-size: 80px; color: #cbd5e1; opacity: 0.15; z-index: 0; pointer-events: none; }
 
@@ -38,7 +47,6 @@
         .line-through-custom { text-decoration: line-through; color: #94a3b8; }
         
         input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        
         #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 600; display: none; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); text-align: center; }
     </style>
 </head>
@@ -47,17 +55,16 @@
     <div id="toast">Thông báo</div>
 
     <aside id="sidebar" class="w-0 flex-shrink-0 bg-white border-r border-slate-200 transition-[width] duration-300 ease-in-out overflow-hidden z-20">
-        <div class="w-[200px] h-full flex flex-col">
-            <div class="p-4 border-b border-slate-100 flex items-center gap-2">
+        <div class="w-[260px] h-full flex flex-col"> <div class="p-4 border-b border-slate-100 flex items-center gap-2">
                 <i class="fa-solid fa-tags text-blue-500 text-xl"></i><h2 class="text-lg font-bold text-slate-800">Danh Mục</h2>
             </div>
-            <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5" id="sidebarTagList"></div>
+            <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-2" id="sidebarTagList"></div>
         </div>
     </aside>
 
     <div id="mainApp" class="flex-1 flex flex-col min-w-0 bg-[#f3f4f6] relative h-full transition-all duration-300">
         
-        <header class="bg-white px-3 py-2.5 shadow-sm z-10 flex-shrink-0 flex flex-col gap-3 relative" id="mainHeader">
+        <header class="bg-white px-4 py-3 shadow-sm z-10 flex-shrink-0 flex flex-col gap-3 relative" id="mainHeader">
             <div class="flex items-center gap-3">
                 <button onclick="toggleSidebar()" class="text-slate-600 text-xl w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center shrink-0">
                     <i class="fa-solid fa-bars"></i>
@@ -65,34 +72,34 @@
                 <div class="flex-1 relative">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm"></i>
                     <input type="text" id="searchInput" placeholder="Tìm kiếm nhanh..." 
-                           class="w-full bg-slate-100 text-slate-700 rounded-full py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-blue-300">
+                           class="w-full bg-slate-100 text-slate-700 rounded-full py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-blue-300">
                 </div>
                 <div class="w-8 h-8 flex items-center justify-center" id="syncHeaderStatus">
                     <i class="fa-solid fa-cloud text-slate-300" id="syncStatusIcon"></i>
                 </div>
             </div>
             
-            <div class="px-1 mb-1">
+            <div class="px-1 mb-1 hidden" id="progressWrapper">
                 <div class="flex justify-between items-end mb-1.5">
-                    <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wide">Tiến độ hành lý</span>
+                    <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wide">Tiến độ cất hành lý</span>
                     <span class="text-[11px] font-bold text-blue-600" id="progressText">0/0 (0%)</span>
                 </div>
-                <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
                     <div id="progressBar" class="h-full bg-blue-500 rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
             </div>
         </header>
 
-        <div class="bg-white border-b border-slate-200 px-3 py-2 flex justify-between items-center text-sm z-10 shadow-sm" id="batchBar">
+        <div class="bg-white border-b border-slate-200 px-4 py-2 flex justify-between items-center text-sm z-10 shadow-sm" id="batchBar">
             <div class="flex items-center gap-2" onclick="toggleSelectAll()">
                 <input type="checkbox" id="selectAllCheckbox" class="custom-checkbox h-5 w-5 !rounded">
                 <span class="font-semibold text-slate-700">Chọn tất cả (<span id="selectedCount">0</span>)</span>
             </div>
             <div id="batchActions" class="hidden gap-2">
-                <button onclick="batchAction('kho')" class="text-blue-500 bg-blue-50 px-2 py-1 rounded text-xs font-bold hover:bg-blue-100"><i class="fa-solid fa-box-open"></i> Kho</button>
-                <button onclick="batchAction('dangmua')" class="text-orange-500 bg-orange-50 px-2 py-1 rounded text-xs font-bold hover:bg-orange-100"><i class="fa-solid fa-cart-shopping"></i> Mua</button>
-                <button onclick="batchAction('vali')" class="text-emerald-500 bg-emerald-50 px-2 py-1 rounded text-xs font-bold hover:bg-emerald-100"><i class="fa-solid fa-suitcase"></i> Cất</button>
-                <button onclick="batchAction('delete')" class="text-red-500 bg-red-50 px-2 py-1 rounded text-xs font-bold hover:bg-red-100"><i class="fa-solid fa-trash"></i></button>
+                <button onclick="batchAction('kho')" class="text-blue-500 bg-blue-50 px-2 py-1.5 rounded text-xs font-bold hover:bg-blue-100"><i class="fa-solid fa-box-open"></i> Kho</button>
+                <button onclick="batchAction('dangmua')" class="text-orange-500 bg-orange-50 px-2 py-1.5 rounded text-xs font-bold hover:bg-orange-100"><i class="fa-solid fa-cart-shopping"></i> Mua</button>
+                <button onclick="batchAction('vali')" class="text-emerald-500 bg-emerald-50 px-2 py-1.5 rounded text-xs font-bold hover:bg-emerald-100"><i class="fa-solid fa-suitcase"></i> Cất</button>
+                <button onclick="batchAction('delete')" class="text-red-500 bg-red-50 px-2 py-1.5 rounded text-xs font-bold hover:bg-red-100"><i class="fa-solid fa-trash"></i></button>
             </div>
         </div>
 
@@ -101,8 +108,8 @@
             <span id="totalPriceDisplay" class="text-blue-600 text-base">0 đ</span>
         </div>
 
-        <main class="flex-1 overflow-y-auto p-3 relative" id="mainContent">
-            <div id="itemList" class="flex flex-col gap-3 pb-6"></div>
+        <main class="flex-1 overflow-y-auto p-4 relative" id="mainContent">
+            <div id="itemList" class="flex flex-col pb-6"></div>
         </main>
 
         <main class="flex-1 overflow-y-auto bg-slate-50 p-4 hidden" id="settingsContent">
@@ -111,14 +118,12 @@
             <div class="bg-white rounded-2xl p-4 shadow-sm border border-blue-100 mb-4 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-bl-full z-0"></div>
                 <h3 class="text-xs font-bold text-blue-500 uppercase tracking-wide mb-3 relative z-10"><i class="fa-solid fa-bolt mr-1"></i> Auto-Sync Realtime</h3>
-                
-                <p class="text-[11px] text-slate-500 mb-3 relative z-10">Mọi thao tác thêm/sửa/xóa/vuốt sẽ tự động đồng bộ ngay lập tức. Không cần ấn nút lưu.</p>
-                
-                <input type="password" id="syncPassInput" placeholder="Nhập mã bí mật để Auto-Sync..." oninput="handleSyncInput(event)" class="w-full bg-slate-100 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3 relative z-10 font-bold">
+                <p class="text-[11px] text-slate-500 mb-3 relative z-10">Dữ liệu đồng bộ tự động giữa các thiết bị.</p>
+                <input type="password" id="syncPassInput" placeholder="Nhập mã bí mật..." oninput="handleSyncInput(event)" class="w-full bg-slate-100 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3 relative z-10 font-bold">
                 
                 <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                    <span class="text-xs font-bold text-slate-600">Trạng thái:</span>
-                    <span class="text-xs font-bold text-blue-600 flex items-center gap-1" id="syncStatusText"><i class="fa-solid fa-circle-pause text-slate-400"></i> Tạm dừng</span>
+                    <span class="text-xs font-bold text-slate-600">Lần cuối: <span class="text-slate-500 font-normal" id="lastSyncTime">Chưa đồng bộ</span></span>
+                    <span class="text-xs font-bold text-blue-600 flex items-center gap-1" id="syncStatusText"><i class="fa-solid fa-circle-pause text-slate-400"></i> Dừng</span>
                 </div>
             </div>
 
@@ -126,7 +131,7 @@
                 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Xuất danh sách hành lý</h3>
                 <div class="flex flex-col gap-2">
                     <button onclick="exportCopy()" class="flex items-center justify-between w-full bg-slate-50 p-3 rounded-xl active:bg-slate-100">
-                        <span class="font-semibold text-sm text-slate-700"><i class="fa-solid fa-copy text-blue-500 mr-2"></i>Copy văn bản (Gửi Zalo/Mess)</span>
+                        <span class="font-semibold text-sm text-slate-700"><i class="fa-solid fa-copy text-blue-500 mr-2"></i>Copy Note (Gửi Zalo/Mess)</span>
                         <i class="fa-solid fa-chevron-right text-slate-300"></i>
                     </button>
                     <button onclick="exportDoc()" class="flex items-center justify-between w-full bg-slate-50 p-3 rounded-xl active:bg-slate-100">
@@ -141,61 +146,61 @@
             </div>
         </main>
 
-        <nav class="bg-white border-t border-slate-200 flex justify-between items-center h-[60px] pb-[env(safe-area-inset-bottom)] flex-shrink-0 w-full z-10 px-2 shadow-[0_-5px_15px_rgba(0,0,0,0.03)]">
+        <nav class="bg-white border-t border-slate-200 flex justify-between items-center h-[65px] pb-[env(safe-area-inset-bottom)] flex-shrink-0 w-full z-10 px-2 shadow-[0_-5px_15px_rgba(0,0,0,0.03)]">
             <button onclick="openAddModal()" class="relative flex flex-col items-center justify-center w-[18%] h-full text-blue-500 transition-colors">
-                <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center mb-0.5 shadow-md active:scale-95 transition-transform"><i class="fa-solid fa-plus"></i></div>
+                <div class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center mb-0.5 shadow-md active:scale-95 transition-transform"><i class="fa-solid fa-plus text-lg"></i></div>
                 <span class="text-[9px] font-bold text-blue-600">Thêm Mới</span>
             </button>
             <button onclick="switchTab('kho')" id="tab-kho" class="nav-btn relative flex flex-col items-center justify-center w-[20%] h-full text-blue-500">
-                <div class="relative"><i class="fa-solid fa-box text-xl mb-0.5"></i><span id="badge-kho" class="absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
-                <span class="text-[9px] font-semibold">Kho Toàn Cầu</span>
+                <div class="relative"><i class="fa-solid fa-box text-[22px] mb-0.5"></i><span id="badge-kho" class="absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
+                <span class="text-[9px] font-semibold">Kho Tổng</span>
             </button>
             <button onclick="switchTab('dangmua')" id="tab-dangmua" class="nav-btn relative flex flex-col items-center justify-center w-[20%] h-full text-slate-400">
-                <div class="relative"><i class="fa-solid fa-cart-shopping text-xl mb-0.5"></i><span id="badge-dangmua" class="absolute -top-1.5 -right-2 bg-orange-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
+                <div class="relative"><i class="fa-solid fa-cart-shopping text-[22px] mb-0.5"></i><span id="badge-dangmua" class="absolute -top-1.5 -right-2 bg-orange-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
                 <span class="text-[9px] font-semibold">Đang Mua</span>
             </button>
             <button onclick="switchTab('vali')" id="tab-vali" class="nav-btn relative flex flex-col items-center justify-center w-[20%] h-full text-slate-400">
-                <div class="relative"><i class="fa-solid fa-suitcase-rolling text-xl mb-0.5"></i><span id="badge-vali" class="absolute -top-1.5 -right-2 bg-emerald-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
-                <span class="text-[9px] font-semibold">Vali Của Tôi</span>
+                <div class="relative"><i class="fa-solid fa-suitcase-rolling text-[22px] mb-0.5"></i><span id="badge-vali" class="absolute -top-1.5 -right-2 bg-emerald-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
+                <span class="text-[9px] font-semibold">Vali Mình</span>
             </button>
             <button onclick="switchTab('settings')" id="tab-settings" class="nav-btn relative flex flex-col items-center justify-center w-[20%] h-full text-slate-400">
-                <i class="fa-solid fa-gear text-xl mb-0.5"></i>
+                <i class="fa-solid fa-gear text-[22px] mb-0.5"></i>
                 <span class="text-[9px] font-semibold">Cài Đặt</span>
             </button>
         </nav>
     </div>
 
-    <div id="longPressMenu" class="fixed inset-0 bg-black/40 z-50 hidden flex flex-col justify-end" onclick="closeContextMenu()">
-        <div class="bg-white w-full rounded-t-3xl p-5 shadow-2xl transform transition-transform translate-y-full" id="longPressContent" onclick="event.stopPropagation()">
+    <div id="longPressMenu" class="fixed inset-0 bg-black/50 z-50 hidden flex flex-col justify-end" onclick="closeContextMenu()">
+        <div class="bg-white w-full rounded-t-3xl p-6 shadow-2xl transform transition-transform translate-y-full" id="longPressContent" onclick="event.stopPropagation()">
             <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-4"></div>
-            <h3 class="font-bold text-slate-800 mb-1 text-center truncate px-4" id="ctxTitle">Tên Món Đồ</h3>
-            <p class="text-xs text-slate-400 text-center mb-5">Chọn thao tác</p>
-            <div class="flex gap-3">
-                <button id="ctxEditBtn" class="flex-1 bg-slate-100 text-blue-600 font-bold py-3 rounded-xl active:bg-slate-200 flex flex-col items-center gap-1"><i class="fa-solid fa-pen text-lg"></i> Chỉnh sửa</button>
-                <button id="ctxDeleteBtn" class="flex-1 bg-red-50 text-red-600 font-bold py-3 rounded-xl active:bg-red-100 flex flex-col items-center gap-1"><i class="fa-solid fa-trash text-lg"></i> Xóa vĩnh viễn</button>
+            <h3 class="font-bold text-lg text-slate-800 mb-1 text-center truncate px-4" id="ctxTitle">Tên Món Đồ</h3>
+            <p class="text-xs text-slate-400 text-center mb-6">Tùy chọn thao tác</p>
+            <div class="flex gap-4">
+                <button id="ctxEditBtn" class="flex-1 bg-slate-100 text-blue-600 font-bold py-4 rounded-xl active:bg-slate-200 flex flex-col items-center gap-2"><i class="fa-solid fa-pen text-xl"></i> Sửa đồ</button>
+                <button id="ctxDeleteBtn" class="flex-1 bg-red-50 text-red-600 font-bold py-4 rounded-xl active:bg-red-100 flex flex-col items-center gap-2"><i class="fa-solid fa-trash text-xl"></i> Xóa luôn</button>
             </div>
         </div>
     </div>
 
-    <div id="addModal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-start pt-[12vh] px-4">
-        <div class="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl" id="modalContent">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold" id="modalTitle">Thêm đồ mới</h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 text-xl"><i class="fa-solid fa-xmark"></i></button>
+    <div id="addModal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-start pt-[15vh] px-4" onclick="if(event.target === this) closeModal()">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl" id="modalContent">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-xl font-bold" id="modalTitle">Thêm đồ mới</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 text-2xl w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <input type="text" id="itemName" placeholder="Tên món đồ..." class="w-full bg-slate-100 rounded-xl p-3 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 font-medium">
-            <div class="flex gap-2 mb-4">
-                <div class="flex items-center justify-between bg-slate-100 rounded-xl px-1 w-[110px] shrink-0 border border-slate-200">
-                    <button type="button" onclick="adjustQty(-1)" class="w-8 h-10 text-slate-500 font-bold text-xl active:text-blue-500">-</button>
-                    <input type="number" id="itemQty" value="1" class="w-8 text-center bg-transparent focus:outline-none text-sm font-bold p-0" readonly>
-                    <button type="button" onclick="adjustQty(1)" class="w-8 h-10 text-slate-500 font-bold text-lg active:text-blue-500">+</button>
+            <input type="text" id="itemName" placeholder="VD: Hộ chiếu, Quần áo..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-4 text-base focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 font-medium transition-all">
+            <div class="flex gap-3 mb-5">
+                <div class="flex items-center justify-between bg-slate-50 rounded-xl px-1 w-[120px] shrink-0 border border-slate-200">
+                    <button type="button" onclick="adjustQty(-1)" class="w-10 h-12 text-slate-500 font-bold text-2xl active:text-blue-500">-</button>
+                    <input type="number" id="itemQty" value="1" class="w-8 text-center bg-transparent focus:outline-none text-base font-bold p-0" readonly>
+                    <button type="button" onclick="adjustQty(1)" class="w-10 h-12 text-slate-500 font-bold text-xl active:text-blue-500">+</button>
                 </div>
                 <div class="relative flex-1">
-                    <input type="text" id="itemPrice" placeholder="Giá 1 món (Tùy chọn)" oninput="formatPriceInput(event)" class="w-full bg-slate-100 rounded-xl p-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-right font-bold border border-slate-200">
-                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 font-bold text-sm">đ</span>
+                    <input type="text" id="itemPrice" placeholder="Giá tiền" oninput="formatPriceInput(event)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 pr-8 text-base focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 text-right font-bold transition-all">
+                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 font-bold">đ</span>
                 </div>
             </div>
-            <button id="submitBtn" onclick="saveItem()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl hover:bg-blue-600 active:scale-95 transition-transform">Thêm vào kho</button>
+            <button id="submitBtn" onclick="saveItem()" class="w-full bg-blue-500 text-white font-bold text-lg py-3.5 rounded-xl hover:bg-blue-600 active:scale-95 transition-transform shadow-md shadow-blue-500/30">Lưu vào kho</button>
         </div>
     </div>
 
@@ -208,7 +213,6 @@
         
         let currentTab = 'kho'; let currentFilterTag = ''; let editingId = null;
 
-        // TỪ ĐIỂN MAP ICON & AUTO DICT
         const catIcons = { "Dành riêng cho bạn": "fa-star", "Thiết Bị Điện Tử": "fa-laptop", "Phụ Kiện Điện Tử": "fa-headphones", "Sức Khỏe & Làm Đẹp": "fa-heart", "Siêu Thị Tạp Hóa": "fa-basket-shopping", "Hàng Gia dụng & Đời sống": "fa-house", "Thời trang & Phụ kiện": "fa-shirt", "Thể Thao & Du Lịch": "fa-plane" };
         const autoDict = [
             { keywords: ["hộ chiếu", "visa", "jw202", "dq", "giấy báo", "tiền", "thẻ visa", "alipay", "wechat", "căn cước", "ảnh thẻ"], category: "Dành riêng cho bạn", aviation: "Bắt Buộc Xách Tay", note: "Luôn mang theo người.", warning: "CỰC KỲ QUAN TRỌNG: Cấm để ký gửi!" },
@@ -229,16 +233,19 @@
             return { category: "Siêu Thị Tạp Hóa", aviation: "Kiểm tra lại", note: "Chưa rõ quy định, tự tìm hiểu xem xách tay hay ký gửi.", warning: "" };
         }
 
-        // --- UTILS ---
         function formatMoney(amount) { return new Intl.NumberFormat('en-US').format(amount); }
         function formatPriceInput(e) { let val = e.target.value.replace(/\D/g, ''); e.target.value = val ? Number(val).toLocaleString('en-US') : ''; }
         function adjustQty(change) { let el = document.getElementById('itemQty'); let newVal = parseInt(el.value) + change; if (newVal >= 1) el.value = newVal; }
         function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
-
-        // --- REALTIME SYNC LOGIC ---
-        let syncInterval = null;
-        let lastPushedString = JSON.stringify(items);
         
+        // Fomat Ngày tháng đẹp
+        function formatDateTime() {
+            let d = new Date();
+            return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')} - ${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
+        }
+
+        // --- SYNC LOGIC ---
+        let syncInterval = null; let lastPushedString = JSON.stringify(items);
         async function callWorker(payload) {
             let opts = { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) };
             const res = await fetch(WORKER_URL, opts);
@@ -247,10 +254,8 @@
         }
 
         async function pushToCloud() {
-            let pass = localStorage.getItem('sync_pass');
-            if(!pass) return;
-            let currentString = JSON.stringify(items);
-            if(currentString === lastPushedString) return; // Không đổi thì không push rác
+            let pass = localStorage.getItem('sync_pass'); if(!pass) return;
+            let currentString = JSON.stringify(items); if(currentString === lastPushedString) return;
             
             document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-500"></i> Đang lưu...`;
             document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud-arrow-up text-blue-500 animate-pulse";
@@ -259,6 +264,10 @@
                 lastPushedString = currentString;
                 document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-cloud-check text-emerald-500"></i> Đã đồng bộ`;
                 document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud-check text-emerald-500";
+                
+                let timeStr = formatDateTime();
+                localStorage.setItem('last_sync_time', timeStr);
+                document.getElementById('lastSyncTime').innerText = timeStr;
             } catch(e) {
                 document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Lỗi mạng`;
                 document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud-xmark text-red-500";
@@ -266,19 +275,15 @@
         }
 
         async function pollCloud() {
-            let pass = localStorage.getItem('sync_pass');
-            if(!pass) return;
+            let pass = localStorage.getItem('sync_pass'); if(!pass) return;
             try {
                 let res = await callWorker({ action: 'sync_load', sync_pass: pass });
                 if(res.success && res.data) {
                     let cloudItems = Array.isArray(res.data) ? res.data : (res.data.vault || []);
                     let cloudString = JSON.stringify(cloudItems);
-                    
                     if(cloudString !== JSON.stringify(items) && cloudString !== lastPushedString) {
-                        items = cloudItems;
-                        localStorage.setItem('packify_data', cloudString);
-                        lastPushedString = cloudString;
-                        renderItems(); updateProgress();
+                        items = cloudItems; localStorage.setItem('packify_data', cloudString); lastPushedString = cloudString;
+                        renderItems(document.getElementById('searchInput').value); updateProgress();
                     }
                     document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-cloud-check text-emerald-500"></i> Đã đồng bộ`;
                     document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud-check text-emerald-500";
@@ -287,42 +292,26 @@
         }
 
         function startAutoSync() {
-            clearInterval(syncInterval);
-            let pass = localStorage.getItem('sync_pass');
-            if(!pass) return;
+            clearInterval(syncInterval); let pass = localStorage.getItem('sync_pass'); if(!pass) return;
             document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-rotate fa-spin text-blue-500"></i> Khởi động...`;
-            pollCloud();
-            syncInterval = setInterval(pollCloud, 3000); // Polling mỗi 3s
+            pollCloud(); syncInterval = setInterval(pollCloud, 3000);
         }
 
         let syncTimeout;
         function handleSyncInput(e) {
             clearTimeout(syncTimeout);
             syncTimeout = setTimeout(() => {
-                let val = e.target.value.trim();
-                localStorage.setItem('sync_pass', val);
+                let val = e.target.value.trim(); localStorage.setItem('sync_pass', val);
                 if(val) startAutoSync();
-                else {
-                    clearInterval(syncInterval);
-                    document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-circle-pause text-slate-400"></i> Tạm dừng`;
-                    document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud text-slate-300";
-                }
+                else { clearInterval(syncInterval); document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-circle-pause text-slate-400"></i> Dừng`; document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud text-slate-300"; }
             }, 800);
         }
 
-        function saveToStorage() { 
-            localStorage.setItem('packify_data', JSON.stringify(items)); 
-            updateProgress(); 
-            pushToCloud(); // Kích hoạt bắn mây ngay khi có thay đổi
-        }
+        function saveToStorage() { localStorage.setItem('packify_data', JSON.stringify(items)); updateProgress(); pushToCloud(); }
 
-        // Khởi động Sync nếu đã có pass
-        window.onload = () => {
-            let pass = localStorage.getItem('sync_pass');
-            if(pass) { document.getElementById('syncPassInput').value = pass; startAutoSync(); }
-        };
+        window.onload = () => { let pass = localStorage.getItem('sync_pass'); if(pass) { document.getElementById('syncPassInput').value = pass; startAutoSync(); } };
 
-        // --- TAB & BATCH LOGIC ---
+        // --- TAB & BATCH ---
         function switchTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.nav-btn').forEach(el => { el.classList.remove('text-blue-500'); el.classList.add('text-slate-400'); });
@@ -332,14 +321,19 @@
                 document.getElementById('mainContent').style.display = 'none';
                 document.getElementById('batchBar').style.display = 'none';
                 document.getElementById('priceBar').style.display = 'none';
+                document.getElementById('progressWrapper').style.display = 'none';
                 document.getElementById('settingsContent').style.display = 'block';
+                document.getElementById('lastSyncTime').innerText = localStorage.getItem('last_sync_time') || "Chưa đồng bộ";
             } else {
                 document.getElementById('mainContent').style.display = 'block';
                 document.getElementById('batchBar').style.display = 'flex';
                 document.getElementById('settingsContent').style.display = 'none';
                 document.getElementById('priceBar').style.display = (tab === 'dangmua' || tab === 'vali') ? 'flex' : 'none';
+                document.getElementById('progressWrapper').style.display = (tab === 'vali') ? 'block' : 'none';
+                
                 document.getElementById('selectAllCheckbox').checked = false;
-                items.forEach(i => i.checked = false); renderItems();
+                items.forEach(i => i.checked = false); 
+                renderItems(document.getElementById('searchInput').value);
             }
         }
 
@@ -352,32 +346,54 @@
             else document.getElementById('progressBar').classList.replace('bg-emerald-500', 'bg-blue-500');
         }
 
-        function toggleCheckbox(id) { let item = items.find(i => i.id === id); if (item) { item.checked = !item.checked; saveToStorage(); } renderItems(); }
-        function toggleSelectAll() { let isChecked = document.getElementById('selectAllCheckbox').checked; items.filter(i => i.status === currentTab).forEach(i => i.checked = isChecked); renderItems(); }
+        function toggleCheckbox(id) { 
+            let item = items.find(i => i.id === id); 
+            if (item) { item.checked = !item.checked; saveToStorage(); } 
+            renderItems(document.getElementById('searchInput').value); 
+        }
+        function toggleSelectAll() { let isChecked = document.getElementById('selectAllCheckbox').checked; items.filter(i => i.status === currentTab).forEach(i => i.checked = isChecked); renderItems(document.getElementById('searchInput').value); }
         function batchAction(action) {
-            let selected = items.filter(i => i.status === currentTab && i.checked);
-            if (selected.length === 0) return;
+            let selected = items.filter(i => i.status === currentTab && i.checked); if (selected.length === 0) return;
             if(action === 'delete') items = items.filter(i => !(i.status === currentTab && i.checked));
             else selected.forEach(i => { i.status = action; i.checked = false; });
-            document.getElementById('selectAllCheckbox').checked = false; saveToStorage(); renderItems();
+            document.getElementById('selectAllCheckbox').checked = false; saveToStorage(); renderItems(document.getElementById('searchInput').value);
         }
 
-        // --- SWIPE LOGIC ---
-        let tX = 0, tY = 0, longPressTimer, isSwiping = false;
+        // --- SWIPE LOGIC (Hỗ trợ cả Mouse và Touch) ---
+        let tX = 0, tY = 0, longPressTimer, isSwiping = false, isMouseDown = false;
+        
+        function getClientX(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
+        function getClientY(e) { return e.touches ? e.touches[0].clientY : e.clientY; }
+
         function handleTouchStart(e, id) {
-            tX = e.touches[0].clientX; tY = e.touches[0].clientY; isSwiping = false;
+            tX = getClientX(e); tY = getClientY(e); isSwiping = false; isMouseDown = true;
             let card = document.getElementById(`card-${id}`); card.style.transition = 'none';
-            longPressTimer = setTimeout(() => { if(!isSwiping) { if (navigator.vibrate) navigator.vibrate(50); openContextMenu(id); } }, 600);
+            longPressTimer = setTimeout(() => { if(!isSwiping && isMouseDown) { if (navigator.vibrate) navigator.vibrate(50); openContextMenu(id); } }, 500);
         }
         function handleTouchMove(e, id) {
-            let deltaX = e.touches[0].clientX - tX; let deltaY = e.touches[0].clientY - tY;
-            if (Math.abs(deltaX) > 15 || Math.abs(deltaY) > 15) { isSwiping = true; clearTimeout(longPressTimer); }
-            if (Math.abs(deltaX) > Math.abs(deltaY) + 10) document.getElementById(`card-${id}`).style.transform = `translateX(${deltaX * 0.5}px)`;
+            if(!isMouseDown) return;
+            let deltaX = getClientX(e) - tX; let deltaY = getClientY(e) - tY;
+            if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) { isSwiping = true; clearTimeout(longPressTimer); }
+            if (Math.abs(deltaX) > Math.abs(deltaY) + 5) {
+                document.getElementById(`card-${id}`).style.transform = `translateX(${deltaX * 0.6}px)`;
+                // Hiện Animation nền
+                if (deltaX > 20) {
+                    document.getElementById(`bg-left-${id}`).style.opacity = Math.min(deltaX / 100, 1);
+                    document.getElementById(`bg-right-${id}`).style.opacity = 0;
+                } else if (deltaX < -20) {
+                    document.getElementById(`bg-right-${id}`).style.opacity = Math.min(Math.abs(deltaX) / 100, 1);
+                    document.getElementById(`bg-left-${id}`).style.opacity = 0;
+                }
+            }
         }
         function handleTouchEnd(e, id) {
-            clearTimeout(longPressTimer); let deltaX = e.changedTouches[0].clientX - tX;
+            if(!isMouseDown) return; isMouseDown = false; clearTimeout(longPressTimer); 
+            let endX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+            let deltaX = endX - tX;
             let card = document.getElementById(`card-${id}`);
-            card.style.transition = 'transform 0.2s'; card.style.transform = `translateX(0px)`;
+            card.style.transition = 'transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)'; card.style.transform = `translateX(0px)`;
+            document.getElementById(`bg-left-${id}`).style.opacity = 0; document.getElementById(`bg-right-${id}`).style.opacity = 0;
+
             if (!isSwiping) return;
             if (deltaX > 80) { card.classList.add('swiping-right'); setTimeout(() => { changeStatus(id, 'vali'); }, 150); }
             else if (deltaX < -80) { card.classList.add('swiping-left'); setTimeout(() => { changeStatus(id, 'dangmua'); }, 150); }
@@ -388,10 +404,10 @@
             document.getElementById('longPressMenu').classList.remove('hidden');
             setTimeout(() => document.getElementById('longPressContent').classList.remove('translate-y-full'), 10);
             document.getElementById('ctxEditBtn').onclick = () => { closeContextMenu(); openEditModal(id); };
-            document.getElementById('ctxDeleteBtn').onclick = () => { items = items.filter(i => i.id !== id); saveToStorage(); renderItems(); closeContextMenu(); };
+            document.getElementById('ctxDeleteBtn').onclick = () => { items = items.filter(i => i.id !== id); saveToStorage(); renderItems(document.getElementById('searchInput').value); closeContextMenu(); };
         }
         function closeContextMenu() { document.getElementById('longPressContent').classList.add('translate-y-full'); setTimeout(() => document.getElementById('longPressMenu').classList.add('hidden'), 200); }
-        function changeStatus(id, newStatus) { let item = items.find(i => i.id === id); if(item) { item.status = newStatus; item.checked = false; saveToStorage(); renderItems(); } }
+        function changeStatus(id, newStatus) { let item = items.find(i => i.id === id); if(item) { item.status = newStatus; item.checked = false; saveToStorage(); renderItems(document.getElementById('searchInput').value); } }
 
         // --- RENDER ---
         function renderItems(searchText = "") {
@@ -413,7 +429,7 @@
 
             filteredItems.forEach((item, index) => {
                 let isValiChecked = (item.checked && currentTab === 'vali');
-                let cardClass = isValiChecked ? "tg-card vali-checked p-3 flex gap-3 z-10" : "tg-card p-3 flex gap-3 z-10";
+                let cardClass = isValiChecked ? "tg-card vali-checked p-4 flex gap-4" : "tg-card p-4 flex gap-4";
                 let textClass = isValiChecked ? 'line-through-custom text-slate-500' : 'text-slate-800';
                 
                 let warningHtml = item.warning ? `<div class="mt-2 text-[11px] text-red-600 bg-red-50 p-2 rounded-lg font-medium leading-snug"><i class="fa-solid fa-triangle-exclamation mr-1"></i>${item.warning}</div>` : '';
@@ -432,29 +448,40 @@
                 let bgIcon = catIcons[item.category] || "fa-box";
 
                 listEl.innerHTML += `
-                    <div class="${cardClass}" id="card-${item.id}"
-                         ontouchstart="handleTouchStart(event, ${item.id})" ontouchmove="handleTouchMove(event, ${item.id})" ontouchend="handleTouchEnd(event, ${item.id})">
-                        <i class="fa-solid ${bgIcon} bg-icon"></i>
-                        <div class="flex flex-col items-center justify-between shrink-0 pt-1 pb-1 w-[24px] z-10">
-                            <input type="checkbox" class="custom-checkbox" onchange="toggleCheckbox(${item.id})" ${item.checked ? 'checked' : ''}>
-                            <span class="text-blue-600 font-black text-[13px] mt-4">#${index + 1}</span>
+                    <div class="card-wrapper">
+                        <div class="swipe-bg">
+                            <div class="swipe-bg-left" id="bg-left-${item.id}"><i class="fa-solid fa-suitcase"></i></div>
+                            <div class="swipe-bg-right" id="bg-right-${item.id}"><i class="fa-solid fa-cart-shopping"></i></div>
                         </div>
-                        <div class="flex-1 min-w-0 z-10">
-                            <div class="flex items-start gap-1.5">
-                                <h3 class="font-bold text-[15px] leading-tight ${textClass} break-words">${item.name}</h3>
-                                <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold shrink-0 mt-0.5">x${item.qty}</span>
+
+                        <div class="${cardClass}" id="card-${item.id}"
+                             onmousedown="handleTouchStart(event, ${item.id})" onmousemove="handleTouchMove(event, ${item.id})" onmouseup="handleTouchEnd(event, ${item.id})" onmouseleave="handleTouchEnd(event, ${item.id})"
+                             ontouchstart="handleTouchStart(event, ${item.id})" ontouchmove="handleTouchMove(event, ${item.id})" ontouchend="handleTouchEnd(event, ${item.id})">
+                            
+                            <i class="fa-solid ${bgIcon} bg-icon"></i>
+                            
+                            <div class="flex flex-col items-center justify-between shrink-0 pt-1 pb-1 w-[24px] z-10">
+                                <input type="checkbox" class="custom-checkbox" onchange="toggleCheckbox(${item.id})" ${item.checked ? 'checked' : ''}>
+                                <span class="text-blue-600 font-black text-[14px] mt-4">#${index + 1}</span>
                             </div>
-                            ${item.price > 0 ? `<div class="text-[12px] font-bold ${priceColor} mt-0.5">${formatMoney(item.price)} đ <span class="text-[10px] text-slate-400 font-normal">/món</span></div>` : ''}
-                            ${item.note ? `<p class="text-[12px] text-slate-500 mt-1 leading-snug italic">${item.note}</p>` : ''}
-                            <div class="flex flex-wrap gap-1.5 mt-2">
-                                <span class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded border border-slate-200 text-slate-600">${item.category}</span>
+                            
+                            <div class="flex-1 min-w-0 z-10">
+                                <div class="flex items-start gap-1.5">
+                                    <h3 class="font-bold text-[16px] leading-tight ${textClass} break-words">${item.name}</h3>
+                                    <span class="text-[11px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold shrink-0 mt-0.5">x${item.qty}</span>
+                                </div>
+                                ${item.price > 0 ? `<div class="text-[13px] font-bold ${priceColor} mt-1">${formatMoney(item.price)} đ <span class="text-[10px] text-slate-400 font-normal">/món</span></div>` : ''}
+                                ${item.note ? `<p class="text-[13px] text-slate-500 mt-1.5 leading-snug italic">${item.note}</p>` : ''}
+                                <div class="flex flex-wrap gap-1.5 mt-2.5">
+                                    <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded border border-slate-200 text-slate-600">${item.category}</span>
+                                </div>
+                                <div class="border-t border-dashed border-slate-200 my-2.5"></div>
+                                <div class="flex items-center gap-1.5">
+                                    <i class="fa-solid fa-plane-departure text-[11px] text-slate-400"></i>
+                                    <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded ${aviaColor}">${item.aviation}</span>
+                                </div>
+                                ${warningHtml}
                             </div>
-                            <div class="border-t border-dashed border-slate-200 my-2"></div>
-                            <div class="flex items-center gap-1">
-                                <i class="fa-solid fa-plane-departure text-[10px] text-slate-400"></i>
-                                <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded ${aviaColor}">${item.aviation}</span>
-                            </div>
-                            ${warningHtml}
                         </div>
                     </div>
                 `;
@@ -471,35 +498,33 @@
             if(!name) return; let autoData = autoCategorize(name);
             if (editingId) { let itemIndex = items.findIndex(i => i.id === editingId); if(itemIndex > -1) { items[itemIndex].name = name; items[itemIndex].qty = Number(qty); items[itemIndex].price = price; items[itemIndex].category = autoData.category; items[itemIndex].aviation = autoData.aviation; items[itemIndex].note = autoData.note; items[itemIndex].warning = autoData.warning; } } 
             else { items.unshift({ id: Date.now(), name: name, qty: Number(qty), price: price, category: autoData.category, aviation: autoData.aviation, note: autoData.note, status: 'kho', warning: autoData.warning, checked: false }); }
-            saveToStorage(); closeModal(); renderItems();
+            saveToStorage(); closeModal(); renderItems(document.getElementById('searchInput').value);
         }
 
-        // --- PUSH SIDEBAR LOGIC ---
         function updateSidebarTags() {
             const listEl = document.getElementById('sidebarTagList');
             const lazadaCats = ["Dành riêng cho bạn", "Thiết Bị Điện Tử", "Phụ Kiện Điện Tử", "Sức Khỏe & Làm Đẹp", "Siêu Thị Tạp Hóa", "Hàng Gia dụng & Đời sống", "Thời trang & Phụ kiện", "Thể Thao & Du Lịch"];
-            listEl.innerHTML = `<button onclick="filterByTag('')" class="text-left px-3 py-2.5 rounded-lg ${currentFilterTag === '' ? 'bg-blue-50 text-blue-600 font-bold' : 'bg-slate-50 text-slate-700 font-medium'} text-sm">Hiển thị tất cả</button>`;
+            listEl.innerHTML = `<button onclick="filterByTag('')" class="text-left px-3 py-3 rounded-lg ${currentFilterTag === '' ? 'bg-blue-50 text-blue-600 font-bold' : 'bg-slate-50 text-slate-700 font-medium'} text-sm">Hiển thị tất cả</button>`;
             lazadaCats.forEach(tag => {
                 let activeClass = currentFilterTag === tag ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-600 hover:bg-slate-50';
-                listEl.innerHTML += `<button onclick="filterByTag('${tag}')" class="text-left px-3 py-2.5 rounded-lg text-sm font-medium ${activeClass}">${tag}</button>`;
+                listEl.innerHTML += `<button onclick="filterByTag('${tag}')" class="text-left px-3 py-3 rounded-lg text-sm font-medium ${activeClass}">${tag}</button>`;
             });
         }
-        function filterByTag(tag) { currentFilterTag = tag; toggleSidebar(); renderItems(); }
+        function filterByTag(tag) { currentFilterTag = tag; toggleSidebar(); renderItems(document.getElementById('searchInput').value); }
 
         const sidebar = document.getElementById('sidebar');
         function toggleSidebar() {
-            if(sidebar.classList.contains('w-0')) sidebar.classList.replace('w-0', 'w-[200px]');
-            else sidebar.classList.replace('w-[200px]', 'w-0');
+            if(sidebar.classList.contains('w-0')) sidebar.classList.replace('w-0', 'w-[260px]');
+            else sidebar.classList.replace('w-[260px]', 'w-0');
         }
         document.getElementById('searchInput').addEventListener('input', (e) => renderItems(e.target.value));
 
-        // --- EXPORT FEATURES ---
+        // --- EXPORT ---
         function exportCopy() {
             if(items.length === 0) return showToast("Không có dữ liệu!");
-            let text = items.map(i => `${i.name} x${i.qty}`).join('\n'); // Nằm riêng từng dòng
+            let text = items.map(i => `${i.name} x${i.qty}`).join('\n');
             navigator.clipboard.writeText(text).then(() => showToast("Đã copy thành công!"));
         }
-
         function exportDoc() {
             if(items.length === 0) return showToast("Không có dữ liệu!");
             let html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'></head><body><h3>Danh sách hành lý</h3><ul>";
@@ -508,7 +533,6 @@
             let blob = new Blob(['\ufeff', html], { type: 'application/msword' });
             let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Packify_HanhLy.doc"; link.click();
         }
-
         function exportCSV() {
             if(items.length === 0) return showToast("Không có dữ liệu!");
             let csv = '\uFEFFTên,Số lượng,Giá tiền,Danh mục,Tag Hàng Không\n';
