@@ -3,29 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Packify Pro v8</title>
+    <title>Packify Pro v9 - Auto Sync</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --tg-bg: #f3f4f6; --tg-card: #ffffff; --tg-blue: #3b82f6; }
         body {
             background-color: var(--tg-bg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            -webkit-tap-highlight-color: transparent; height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
-            user-select: none;
+            -webkit-tap-highlight-color: transparent; height: 100dvh; overflow: hidden; user-select: none;
         }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         
-        /* Chống lỗi vuốt nhầm, cho phép cuộn dọc */
         .tg-card { 
             background-color: var(--tg-card); border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            position: relative; overflow: hidden; touch-action: pan-y; transition: transform 0.2s, opacity 0.2s;
+            position: relative; overflow: hidden; touch-action: pan-y; transition: transform 0.2s, opacity 0.2s, background-color 0.3s;
         }
         .tg-card.swiping-left { transform: translateX(-30px); opacity: 0.8; }
         .tg-card.swiping-right { transform: translateX(30px); opacity: 0.8; }
+        
+        /* Đổi màu cực nổi bật khi tick ở Vali */
+        .tg-card.vali-checked { background-color: #f1f5f9; border: 2px dashed #cbd5e1; opacity: 0.6; filter: grayscale(80%); }
 
-        .bg-icon {
-            position: absolute; right: -10px; bottom: -15px; font-size: 80px; color: #cbd5e1; opacity: 0.15; z-index: 0; pointer-events: none;
-        }
+        .bg-icon { position: absolute; right: -10px; bottom: -15px; font-size: 80px; color: #cbd5e1; opacity: 0.15; z-index: 0; pointer-events: none; }
 
         .custom-checkbox {
             appearance: none; width: 22px; height: 22px; min-width: 22px;
@@ -36,134 +35,134 @@
             content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
             color: white; font-size: 12px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         }
-        .line-through-custom { text-decoration: line-through; color: #9ca3af; }
-        .sidebar-content { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .line-through-custom { text-decoration: line-through; color: #94a3b8; }
         
-        input[type="number"]::-webkit-inner-spin-button, 
-        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         
-        /* Toast Notification */
         #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 600; display: none; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); text-align: center; }
     </style>
 </head>
-<body class="text-slate-800">
+<body class="flex w-full">
 
     <div id="toast">Thông báo</div>
 
-    <header class="bg-white px-3 py-2.5 shadow-sm z-10 flex flex-col gap-3 relative" id="mainHeader">
-        <div class="flex items-center gap-3">
-            <button onclick="toggleSidebar()" class="text-slate-600 text-xl w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center shrink-0">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-            <div class="flex-1 relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm"></i>
-                <input type="text" id="searchInput" placeholder="Tìm kiếm nhanh..." 
-                       class="w-full bg-slate-100 text-slate-700 rounded-full py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-blue-300">
-            </div>
-        </div>
-        
-        <div class="px-1 mb-1">
-            <div class="flex justify-between items-end mb-1.5">
-                <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wide">Tiến độ hành lý</span>
-                <span class="text-[11px] font-bold text-blue-600" id="progressText">0/0 (0%)</span>
-            </div>
-            <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div id="progressBar" class="h-full bg-blue-500 rounded-full transition-all duration-500" style="width: 0%"></div>
-            </div>
-        </div>
-    </header>
-
-    <div class="bg-white border-b border-slate-200 px-3 py-2 flex justify-between items-center text-sm z-10 shadow-sm" id="batchBar">
-        <div class="flex items-center gap-2" onclick="toggleSelectAll()">
-            <input type="checkbox" id="selectAllCheckbox" class="custom-checkbox h-5 w-5 !rounded">
-            <span class="font-semibold text-slate-700">Chọn tất cả (<span id="selectedCount">0</span>)</span>
-        </div>
-        <div id="batchActions" class="hidden gap-2">
-            <button onclick="batchAction('dangmua')" class="text-orange-500 bg-orange-50 px-2 py-1 rounded text-xs font-bold hover:bg-orange-100"><i class="fa-solid fa-cart-shopping"></i> Mua</button>
-            <button onclick="batchAction('vali')" class="text-emerald-500 bg-emerald-50 px-2 py-1 rounded text-xs font-bold hover:bg-emerald-100"><i class="fa-solid fa-suitcase"></i> Cất</button>
-            <button onclick="batchAction('delete')" class="text-red-500 bg-red-50 px-2 py-1 rounded text-xs font-bold hover:bg-red-100"><i class="fa-solid fa-trash"></i></button>
-        </div>
-    </div>
-
-    <div id="priceBar" class="bg-blue-50 text-blue-800 px-4 py-2 flex justify-between items-center text-sm font-bold border-b border-blue-100 hidden">
-        <span><i class="fa-solid fa-receipt mr-1"></i> Tổng chi phí:</span>
-        <span id="totalPriceDisplay" class="text-blue-600 text-base">0 đ</span>
-    </div>
-
-    <main class="flex-1 overflow-y-auto p-3 pb-24 relative" id="mainContent">
-        <div id="itemList" class="flex flex-col gap-3"></div>
-    </main>
-
-    <main class="flex-1 overflow-y-auto bg-slate-50 p-4 pb-24 hidden" id="settingsContent">
-        <h2 class="text-xl font-bold mb-4 text-slate-800">Cài đặt & Dữ liệu</h2>
-        
-        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4">
-            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Xuất danh sách hành lý</h3>
-            <div class="flex flex-col gap-2">
-                <button onclick="exportCopy()" class="flex items-center justify-between w-full bg-slate-50 p-3 rounded-xl active:bg-slate-100">
-                    <span class="font-semibold text-sm text-slate-700"><i class="fa-solid fa-copy text-blue-500 mr-2"></i>Copy văn bản (Gửi Zalo/Mess)</span>
-                    <i class="fa-solid fa-chevron-right text-slate-300"></i>
-                </button>
-                <button onclick="exportDoc()" class="flex items-center justify-between w-full bg-slate-50 p-3 rounded-xl active:bg-slate-100">
-                    <span class="font-semibold text-sm text-slate-700"><i class="fa-solid fa-file-word text-blue-600 mr-2"></i>Tải file Word (.doc)</span>
-                    <i class="fa-solid fa-chevron-right text-slate-300"></i>
-                </button>
-                <button onclick="exportCSV()" class="flex items-center justify-between w-full bg-slate-50 p-3 rounded-xl active:bg-slate-100">
-                    <span class="font-semibold text-sm text-slate-700"><i class="fa-solid fa-file-excel text-emerald-600 mr-2"></i>Tải file Excel (.csv)</span>
-                    <i class="fa-solid fa-chevron-right text-slate-300"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Đồng bộ Cloud</h3>
-            <div class="flex justify-between items-center mb-3">
-                <span class="text-sm font-semibold text-slate-700">Trạng thái:</span>
-                <span class="text-xs text-slate-500" id="lastSyncTime">Chưa đồng bộ</span>
-            </div>
-            
-            <label class="text-xs font-bold text-slate-500 mb-1 block">Mã Sync bí mật:</label>
-            <input type="password" id="syncPassInput" placeholder="Nhập mã (VD: awkmaster123)" class="w-full bg-slate-100 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
-            
-            <div class="flex gap-2 mb-4">
-                <button onclick="syncCloud('load')" class="flex-1 bg-blue-50 text-blue-600 font-bold py-2.5 rounded-xl border border-blue-100 active:bg-blue-100"><i class="fa-solid fa-cloud-arrow-down mr-1"></i> TẢI XUỐNG</button>
-                <button onclick="syncCloud('save')" class="flex-1 bg-blue-500 text-white font-bold py-2.5 rounded-xl active:bg-blue-600"><i class="fa-solid fa-cloud-arrow-up mr-1"></i> LƯU LÊN</button>
-            </div>
-            <button onclick="deleteCloudData()" class="w-full text-red-500 font-bold py-2 rounded-xl text-sm active:bg-red-50"><i class="fa-solid fa-trash mr-1"></i> Xóa dữ liệu Cloud</button>
-        </div>
-    </main>
-
-    <nav class="bg-white border-t border-slate-200 flex justify-between items-center h-[60px] pb-[env(safe-area-inset-bottom)] fixed bottom-0 w-full z-10 px-2 shadow-[0_-5px_15px_rgba(0,0,0,0.03)]">
-        <button onclick="openAddModal()" class="relative flex flex-col items-center justify-center w-[18%] h-full text-blue-500 transition-colors">
-            <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center mb-0.5 shadow-md active:scale-95 transition-transform"><i class="fa-solid fa-plus"></i></div>
-            <span class="text-[9px] font-bold text-blue-600">Thêm Mới</span>
-        </button>
-        
-        <button onclick="switchTab('kho')" id="tab-kho" class="nav-btn relative flex flex-col items-center justify-center w-[20%] h-full text-blue-500">
-            <div class="relative"><i class="fa-solid fa-box text-xl mb-0.5"></i><span id="badge-kho" class="absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
-            <span class="text-[9px] font-semibold">Kho Toàn Cầu</span>
-        </button>
-        <button onclick="switchTab('dangmua')" id="tab-dangmua" class="nav-btn relative flex flex-col items-center justify-center w-[20%] h-full text-slate-400">
-            <div class="relative"><i class="fa-solid fa-cart-shopping text-xl mb-0.5"></i><span id="badge-dangmua" class="absolute -top-1.5 -right-2 bg-orange-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
-            <span class="text-[9px] font-semibold">Đang Mua</span>
-        </button>
-        <button onclick="switchTab('vali')" id="tab-vali" class="nav-btn relative flex flex-col items-center justify-center w-[20%] h-full text-slate-400">
-            <div class="relative"><i class="fa-solid fa-suitcase-rolling text-xl mb-0.5"></i><span id="badge-vali" class="absolute -top-1.5 -right-2 bg-emerald-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
-            <span class="text-[9px] font-semibold">Vali Của Tôi</span>
-        </button>
-        <button onclick="switchTab('settings')" id="tab-settings" class="nav-btn relative flex flex-col items-center justify-center w-[20%] h-full text-slate-400">
-            <i class="fa-solid fa-gear text-xl mb-0.5"></i>
-            <span class="text-[9px] font-semibold">Cài Đặt</span>
-        </button>
-    </nav>
-
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-50 hidden" onclick="toggleSidebar()">
-        <div id="sidebarContent" class="w-[75%] max-w-[280px] bg-white h-full transform -translate-x-full sidebar-content flex flex-col" onclick="event.stopPropagation()">
+    <aside id="sidebar" class="w-0 flex-shrink-0 bg-white border-r border-slate-200 transition-[width] duration-300 ease-in-out overflow-hidden z-20">
+        <div class="w-[200px] h-full flex flex-col">
             <div class="p-4 border-b border-slate-100 flex items-center gap-2">
-                <i class="fa-solid fa-tags text-blue-500 text-xl"></i><h2 class="text-xl font-bold text-slate-800">Danh Mục Lazada</h2>
+                <i class="fa-solid fa-tags text-blue-500 text-xl"></i><h2 class="text-lg font-bold text-slate-800">Danh Mục</h2>
             </div>
             <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5" id="sidebarTagList"></div>
         </div>
+    </aside>
+
+    <div id="mainApp" class="flex-1 flex flex-col min-w-0 bg-[#f3f4f6] relative h-full transition-all duration-300">
+        
+        <header class="bg-white px-3 py-2.5 shadow-sm z-10 flex-shrink-0 flex flex-col gap-3 relative" id="mainHeader">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="text-slate-600 text-xl w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="flex-1 relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="searchInput" placeholder="Tìm kiếm nhanh..." 
+                           class="w-full bg-slate-100 text-slate-700 rounded-full py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-blue-300">
+                </div>
+                <div class="w-8 h-8 flex items-center justify-center" id="syncHeaderStatus">
+                    <i class="fa-solid fa-cloud text-slate-300" id="syncStatusIcon"></i>
+                </div>
+            </div>
+            
+            <div class="px-1 mb-1">
+                <div class="flex justify-between items-end mb-1.5">
+                    <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wide">Tiến độ hành lý</span>
+                    <span class="text-[11px] font-bold text-blue-600" id="progressText">0/0 (0%)</span>
+                </div>
+                <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="progressBar" class="h-full bg-blue-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+        </header>
+
+        <div class="bg-white border-b border-slate-200 px-3 py-2 flex justify-between items-center text-sm z-10 shadow-sm" id="batchBar">
+            <div class="flex items-center gap-2" onclick="toggleSelectAll()">
+                <input type="checkbox" id="selectAllCheckbox" class="custom-checkbox h-5 w-5 !rounded">
+                <span class="font-semibold text-slate-700">Chọn tất cả (<span id="selectedCount">0</span>)</span>
+            </div>
+            <div id="batchActions" class="hidden gap-2">
+                <button onclick="batchAction('kho')" class="text-blue-500 bg-blue-50 px-2 py-1 rounded text-xs font-bold hover:bg-blue-100"><i class="fa-solid fa-box-open"></i> Kho</button>
+                <button onclick="batchAction('dangmua')" class="text-orange-500 bg-orange-50 px-2 py-1 rounded text-xs font-bold hover:bg-orange-100"><i class="fa-solid fa-cart-shopping"></i> Mua</button>
+                <button onclick="batchAction('vali')" class="text-emerald-500 bg-emerald-50 px-2 py-1 rounded text-xs font-bold hover:bg-emerald-100"><i class="fa-solid fa-suitcase"></i> Cất</button>
+                <button onclick="batchAction('delete')" class="text-red-500 bg-red-50 px-2 py-1 rounded text-xs font-bold hover:bg-red-100"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        </div>
+
+        <div id="priceBar" class="bg-blue-50 text-blue-800 px-4 py-2 flex justify-between items-center text-sm font-bold border-b border-blue-100 hidden">
+            <span><i class="fa-solid fa-receipt mr-1"></i> Tổng chi phí:</span>
+            <span id="totalPriceDisplay" class="text-blue-600 text-base">0 đ</span>
+        </div>
+
+        <main class="flex-1 overflow-y-auto p-3 relative" id="mainContent">
+            <div id="itemList" class="flex flex-col gap-3 pb-6"></div>
+        </main>
+
+        <main class="flex-1 overflow-y-auto bg-slate-50 p-4 hidden" id="settingsContent">
+            <h2 class="text-xl font-bold mb-4 text-slate-800">Cài đặt & Dữ liệu</h2>
+            
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-blue-100 mb-4 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-bl-full z-0"></div>
+                <h3 class="text-xs font-bold text-blue-500 uppercase tracking-wide mb-3 relative z-10"><i class="fa-solid fa-bolt mr-1"></i> Auto-Sync Realtime</h3>
+                
+                <p class="text-[11px] text-slate-500 mb-3 relative z-10">Mọi thao tác thêm/sửa/xóa/vuốt sẽ tự động đồng bộ ngay lập tức. Không cần ấn nút lưu.</p>
+                
+                <input type="password" id="syncPassInput" placeholder="Nhập mã bí mật để Auto-Sync..." oninput="handleSyncInput(event)" class="w-full bg-slate-100 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3 relative z-10 font-bold">
+                
+                <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                    <span class="text-xs font-bold text-slate-600">Trạng thái:</span>
+                    <span class="text-xs font-bold text-blue-600 flex items-center gap-1" id="syncStatusText"><i class="fa-solid fa-circle-pause text-slate-400"></i> Tạm dừng</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Xuất danh sách hành lý</h3>
+                <div class="flex flex-col gap-2">
+                    <button onclick="exportCopy()" class="flex items-center justify-between w-full bg-slate-50 p-3 rounded-xl active:bg-slate-100">
+                        <span class="font-semibold text-sm text-slate-700"><i class="fa-solid fa-copy text-blue-500 mr-2"></i>Copy văn bản (Gửi Zalo/Mess)</span>
+                        <i class="fa-solid fa-chevron-right text-slate-300"></i>
+                    </button>
+                    <button onclick="exportDoc()" class="flex items-center justify-between w-full bg-slate-50 p-3 rounded-xl active:bg-slate-100">
+                        <span class="font-semibold text-sm text-slate-700"><i class="fa-solid fa-file-word text-blue-600 mr-2"></i>Tải file Word (.doc)</span>
+                        <i class="fa-solid fa-chevron-right text-slate-300"></i>
+                    </button>
+                    <button onclick="exportCSV()" class="flex items-center justify-between w-full bg-slate-50 p-3 rounded-xl active:bg-slate-100">
+                        <span class="font-semibold text-sm text-slate-700"><i class="fa-solid fa-file-excel text-emerald-600 mr-2"></i>Tải file Excel (.csv)</span>
+                        <i class="fa-solid fa-chevron-right text-slate-300"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <nav class="bg-white border-t border-slate-200 flex justify-between items-center h-[60px] pb-[env(safe-area-inset-bottom)] flex-shrink-0 w-full z-10 px-2 shadow-[0_-5px_15px_rgba(0,0,0,0.03)]">
+            <button onclick="openAddModal()" class="relative flex flex-col items-center justify-center w-[18%] h-full text-blue-500 transition-colors">
+                <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center mb-0.5 shadow-md active:scale-95 transition-transform"><i class="fa-solid fa-plus"></i></div>
+                <span class="text-[9px] font-bold text-blue-600">Thêm Mới</span>
+            </button>
+            <button onclick="switchTab('kho')" id="tab-kho" class="nav-btn relative flex flex-col items-center justify-center w-[20%] h-full text-blue-500">
+                <div class="relative"><i class="fa-solid fa-box text-xl mb-0.5"></i><span id="badge-kho" class="absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
+                <span class="text-[9px] font-semibold">Kho Toàn Cầu</span>
+            </button>
+            <button onclick="switchTab('dangmua')" id="tab-dangmua" class="nav-btn relative flex flex-col items-center justify-center w-[20%] h-full text-slate-400">
+                <div class="relative"><i class="fa-solid fa-cart-shopping text-xl mb-0.5"></i><span id="badge-dangmua" class="absolute -top-1.5 -right-2 bg-orange-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
+                <span class="text-[9px] font-semibold">Đang Mua</span>
+            </button>
+            <button onclick="switchTab('vali')" id="tab-vali" class="nav-btn relative flex flex-col items-center justify-center w-[20%] h-full text-slate-400">
+                <div class="relative"><i class="fa-solid fa-suitcase-rolling text-xl mb-0.5"></i><span id="badge-vali" class="absolute -top-1.5 -right-2 bg-emerald-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm">0</span></div>
+                <span class="text-[9px] font-semibold">Vali Của Tôi</span>
+            </button>
+            <button onclick="switchTab('settings')" id="tab-settings" class="nav-btn relative flex flex-col items-center justify-center w-[20%] h-full text-slate-400">
+                <i class="fa-solid fa-gear text-xl mb-0.5"></i>
+                <span class="text-[9px] font-semibold">Cài Đặt</span>
+            </button>
+        </nav>
     </div>
 
     <div id="longPressMenu" class="fixed inset-0 bg-black/40 z-50 hidden flex flex-col justify-end" onclick="closeContextMenu()">
@@ -171,14 +170,9 @@
             <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-4"></div>
             <h3 class="font-bold text-slate-800 mb-1 text-center truncate px-4" id="ctxTitle">Tên Món Đồ</h3>
             <p class="text-xs text-slate-400 text-center mb-5">Chọn thao tác</p>
-            
             <div class="flex gap-3">
-                <button id="ctxEditBtn" class="flex-1 bg-slate-100 text-blue-600 font-bold py-3 rounded-xl active:bg-slate-200 flex flex-col items-center gap-1">
-                    <i class="fa-solid fa-pen text-lg"></i> Chỉnh sửa
-                </button>
-                <button id="ctxDeleteBtn" class="flex-1 bg-red-50 text-red-600 font-bold py-3 rounded-xl active:bg-red-100 flex flex-col items-center gap-1">
-                    <i class="fa-solid fa-trash text-lg"></i> Xóa vĩnh viễn
-                </button>
+                <button id="ctxEditBtn" class="flex-1 bg-slate-100 text-blue-600 font-bold py-3 rounded-xl active:bg-slate-200 flex flex-col items-center gap-1"><i class="fa-solid fa-pen text-lg"></i> Chỉnh sửa</button>
+                <button id="ctxDeleteBtn" class="flex-1 bg-red-50 text-red-600 font-bold py-3 rounded-xl active:bg-red-100 flex flex-col items-center gap-1"><i class="fa-solid fa-trash text-lg"></i> Xóa vĩnh viễn</button>
             </div>
         </div>
     </div>
@@ -189,24 +183,19 @@
                 <h3 class="text-lg font-bold" id="modalTitle">Thêm đồ mới</h3>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 text-xl"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            
             <input type="text" id="itemName" placeholder="Tên món đồ..." class="w-full bg-slate-100 rounded-xl p-3 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 font-medium">
-            
             <div class="flex gap-2 mb-4">
                 <div class="flex items-center justify-between bg-slate-100 rounded-xl px-1 w-[110px] shrink-0 border border-slate-200">
                     <button type="button" onclick="adjustQty(-1)" class="w-8 h-10 text-slate-500 font-bold text-xl active:text-blue-500">-</button>
                     <input type="number" id="itemQty" value="1" class="w-8 text-center bg-transparent focus:outline-none text-sm font-bold p-0" readonly>
                     <button type="button" onclick="adjustQty(1)" class="w-8 h-10 text-slate-500 font-bold text-lg active:text-blue-500">+</button>
                 </div>
-                
                 <div class="relative flex-1">
                     <input type="text" id="itemPrice" placeholder="Giá 1 món (Tùy chọn)" oninput="formatPriceInput(event)" class="w-full bg-slate-100 rounded-xl p-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-right font-bold border border-slate-200">
                     <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 font-bold text-sm">đ</span>
                 </div>
             </div>
-            <button id="submitBtn" onclick="saveItem()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl hover:bg-blue-600 active:scale-95 transition-transform">
-                Thêm vào kho
-            </button>
+            <button id="submitBtn" onclick="saveItem()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl hover:bg-blue-600 active:scale-95 transition-transform">Thêm vào kho</button>
         </div>
     </div>
 
@@ -217,19 +206,10 @@
             { id: 2, name: "Sạc dự phòng", qty: 1, price: 350000, category: "Phụ Kiện Điện Tử", aviation: "Xách tay", note: "Nên mang loại 10000 - 20000mAh.", status: "kho", warning: "Tuyệt đối KHÔNG KÝ GỬI sạc dự phòng.", checked: false }
         ];
         
-        function saveToStorage() { localStorage.setItem('packify_data', JSON.stringify(items)); updateProgress(); }
+        let currentTab = 'kho'; let currentFilterTag = ''; let editingId = null;
 
-        let currentTab = 'kho';
-        let currentFilterTag = '';
-        let editingId = null;
-
-        // TỪ ĐIỂN MAP ICON
-        const catIcons = {
-            "Dành riêng cho bạn": "fa-star", "Thiết Bị Điện Tử": "fa-laptop", "Phụ Kiện Điện Tử": "fa-headphones",
-            "Sức Khỏe & Làm Đẹp": "fa-heart", "Siêu Thị Tạp Hóa": "fa-basket-shopping", "Hàng Gia dụng & Đời sống": "fa-house",
-            "Thời trang & Phụ kiện": "fa-shirt", "Thể Thao & Du Lịch": "fa-plane"
-        };
-
+        // TỪ ĐIỂN MAP ICON & AUTO DICT
+        const catIcons = { "Dành riêng cho bạn": "fa-star", "Thiết Bị Điện Tử": "fa-laptop", "Phụ Kiện Điện Tử": "fa-headphones", "Sức Khỏe & Làm Đẹp": "fa-heart", "Siêu Thị Tạp Hóa": "fa-basket-shopping", "Hàng Gia dụng & Đời sống": "fa-house", "Thời trang & Phụ kiện": "fa-shirt", "Thể Thao & Du Lịch": "fa-plane" };
         const autoDict = [
             { keywords: ["hộ chiếu", "visa", "jw202", "dq", "giấy báo", "tiền", "thẻ visa", "alipay", "wechat", "căn cước", "ảnh thẻ"], category: "Dành riêng cho bạn", aviation: "Bắt Buộc Xách Tay", note: "Luôn mang theo người.", warning: "CỰC KỲ QUAN TRỌNG: Cấm để ký gửi!" },
             { keywords: ["laptop", "điện thoại", "ipad", "máy ảnh"], category: "Thiết Bị Điện Tử", aviation: "Bắt Buộc Xách Tay", note: "Sạc đầy pin trước khi bay.", warning: "Cấm ký gửi thiết bị có pin dung lượng lớn." },
@@ -245,166 +225,177 @@
 
         function autoCategorize(name) {
             let lowerName = name.toLowerCase();
-            for (let dict of autoDict) {
-                if (dict.keywords.some(kw => lowerName.includes(kw))) {
-                    return { category: dict.category, aviation: dict.aviation, note: dict.note, warning: dict.warning };
-                }
-            }
+            for (let dict of autoDict) if (dict.keywords.some(kw => lowerName.includes(kw))) return { category: dict.category, aviation: dict.aviation, note: dict.note, warning: dict.warning };
             return { category: "Siêu Thị Tạp Hóa", aviation: "Kiểm tra lại", note: "Chưa rõ quy định, tự tìm hiểu xem xách tay hay ký gửi.", warning: "" };
         }
 
         // --- UTILS ---
         function formatMoney(amount) { return new Intl.NumberFormat('en-US').format(amount); }
-        function formatPriceInput(e) {
-            let val = e.target.value.replace(/\D/g, '');
-            e.target.value = val ? Number(val).toLocaleString('en-US') : '';
-        }
-        function adjustQty(change) {
-            let el = document.getElementById('itemQty');
-            let newVal = parseInt(el.value) + change;
-            if (newVal >= 1) el.value = newVal;
-        }
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.innerText = msg; t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 2000);
+        function formatPriceInput(e) { let val = e.target.value.replace(/\D/g, ''); e.target.value = val ? Number(val).toLocaleString('en-US') : ''; }
+        function adjustQty(change) { let el = document.getElementById('itemQty'); let newVal = parseInt(el.value) + change; if (newVal >= 1) el.value = newVal; }
+        function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
+
+        // --- REALTIME SYNC LOGIC ---
+        let syncInterval = null;
+        let lastPushedString = JSON.stringify(items);
+        
+        async function callWorker(payload) {
+            let opts = { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) };
+            const res = await fetch(WORKER_URL, opts);
+            if(!res.ok) throw new Error("Lỗi kết nối");
+            return await res.json();
         }
 
-        // --- TAB & PROGRESS LOGIC ---
+        async function pushToCloud() {
+            let pass = localStorage.getItem('sync_pass');
+            if(!pass) return;
+            let currentString = JSON.stringify(items);
+            if(currentString === lastPushedString) return; // Không đổi thì không push rác
+            
+            document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-500"></i> Đang lưu...`;
+            document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud-arrow-up text-blue-500 animate-pulse";
+            try {
+                await callWorker({ action: 'sync_save', sync_pass: pass, data: { vault: items } });
+                lastPushedString = currentString;
+                document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-cloud-check text-emerald-500"></i> Đã đồng bộ`;
+                document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud-check text-emerald-500";
+            } catch(e) {
+                document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Lỗi mạng`;
+                document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud-xmark text-red-500";
+            }
+        }
+
+        async function pollCloud() {
+            let pass = localStorage.getItem('sync_pass');
+            if(!pass) return;
+            try {
+                let res = await callWorker({ action: 'sync_load', sync_pass: pass });
+                if(res.success && res.data) {
+                    let cloudItems = Array.isArray(res.data) ? res.data : (res.data.vault || []);
+                    let cloudString = JSON.stringify(cloudItems);
+                    
+                    if(cloudString !== JSON.stringify(items) && cloudString !== lastPushedString) {
+                        items = cloudItems;
+                        localStorage.setItem('packify_data', cloudString);
+                        lastPushedString = cloudString;
+                        renderItems(); updateProgress();
+                    }
+                    document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-cloud-check text-emerald-500"></i> Đã đồng bộ`;
+                    document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud-check text-emerald-500";
+                }
+            } catch(e) {}
+        }
+
+        function startAutoSync() {
+            clearInterval(syncInterval);
+            let pass = localStorage.getItem('sync_pass');
+            if(!pass) return;
+            document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-rotate fa-spin text-blue-500"></i> Khởi động...`;
+            pollCloud();
+            syncInterval = setInterval(pollCloud, 3000); // Polling mỗi 3s
+        }
+
+        let syncTimeout;
+        function handleSyncInput(e) {
+            clearTimeout(syncTimeout);
+            syncTimeout = setTimeout(() => {
+                let val = e.target.value.trim();
+                localStorage.setItem('sync_pass', val);
+                if(val) startAutoSync();
+                else {
+                    clearInterval(syncInterval);
+                    document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-circle-pause text-slate-400"></i> Tạm dừng`;
+                    document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud text-slate-300";
+                }
+            }, 800);
+        }
+
+        function saveToStorage() { 
+            localStorage.setItem('packify_data', JSON.stringify(items)); 
+            updateProgress(); 
+            pushToCloud(); // Kích hoạt bắn mây ngay khi có thay đổi
+        }
+
+        // Khởi động Sync nếu đã có pass
+        window.onload = () => {
+            let pass = localStorage.getItem('sync_pass');
+            if(pass) { document.getElementById('syncPassInput').value = pass; startAutoSync(); }
+        };
+
+        // --- TAB & BATCH LOGIC ---
         function switchTab(tab) {
             currentTab = tab;
-            document.querySelectorAll('.nav-btn').forEach(el => {
-                el.classList.remove('text-blue-500'); el.classList.add('text-slate-400');
-            });
-            document.getElementById(`tab-${tab}`).classList.remove('text-slate-400');
-            document.getElementById(`tab-${tab}`).classList.add('text-blue-500');
+            document.querySelectorAll('.nav-btn').forEach(el => { el.classList.remove('text-blue-500'); el.classList.add('text-slate-400'); });
+            document.getElementById(`tab-${tab}`).classList.replace('text-slate-400', 'text-blue-500');
 
             if(tab === 'settings') {
                 document.getElementById('mainContent').style.display = 'none';
-                document.getElementById('mainHeader').style.display = 'none';
                 document.getElementById('batchBar').style.display = 'none';
                 document.getElementById('priceBar').style.display = 'none';
                 document.getElementById('settingsContent').style.display = 'block';
-                document.getElementById('syncPassInput').value = localStorage.getItem('sync_pass') || '';
-                document.getElementById('lastSyncTime').innerText = localStorage.getItem('last_sync_time') || "Chưa đồng bộ";
             } else {
                 document.getElementById('mainContent').style.display = 'block';
-                document.getElementById('mainHeader').style.display = 'flex';
                 document.getElementById('batchBar').style.display = 'flex';
                 document.getElementById('settingsContent').style.display = 'none';
                 document.getElementById('priceBar').style.display = (tab === 'dangmua' || tab === 'vali') ? 'flex' : 'none';
                 document.getElementById('selectAllCheckbox').checked = false;
-                items.forEach(i => i.checked = false);
-                renderItems();
+                items.forEach(i => i.checked = false); renderItems();
             }
         }
 
         function updateProgress() {
-            let total = items.length;
-            let inVali = items.filter(i => i.status === 'vali').length;
+            let total = items.length; let inVali = items.filter(i => i.status === 'vali').length;
             let percent = total === 0 ? 0 : Math.round((inVali / total) * 100);
             document.getElementById('progressText').innerText = `${inVali}/${total} (${percent}%)`;
             document.getElementById('progressBar').style.width = `${percent}%`;
-            // Chuyển màu xanh lá nếu full 100%
             if(percent === 100 && total > 0) document.getElementById('progressBar').classList.replace('bg-blue-500', 'bg-emerald-500');
             else document.getElementById('progressBar').classList.replace('bg-emerald-500', 'bg-blue-500');
         }
 
-        // --- CHECKBOX & BATCH ---
-        function toggleCheckbox(id) {
-            let item = items.find(i => i.id === id);
-            if (item) { item.checked = !item.checked; saveToStorage(); }
-            renderItems();
-        }
-        function toggleSelectAll() {
-            let isChecked = document.getElementById('selectAllCheckbox').checked;
-            items.filter(i => i.status === currentTab).forEach(i => i.checked = isChecked);
-            renderItems();
-        }
+        function toggleCheckbox(id) { let item = items.find(i => i.id === id); if (item) { item.checked = !item.checked; saveToStorage(); } renderItems(); }
+        function toggleSelectAll() { let isChecked = document.getElementById('selectAllCheckbox').checked; items.filter(i => i.status === currentTab).forEach(i => i.checked = isChecked); renderItems(); }
         function batchAction(action) {
             let selected = items.filter(i => i.status === currentTab && i.checked);
             if (selected.length === 0) return;
-            if(action === 'delete') { items = items.filter(i => !(i.status === currentTab && i.checked)); }
-            else { selected.forEach(i => { i.status = action; i.checked = false; }); }
-            document.getElementById('selectAllCheckbox').checked = false;
-            saveToStorage(); renderItems();
+            if(action === 'delete') items = items.filter(i => !(i.status === currentTab && i.checked));
+            else selected.forEach(i => { i.status = action; i.checked = false; });
+            document.getElementById('selectAllCheckbox').checked = false; saveToStorage(); renderItems();
         }
 
-        // --- SWIPE & HOLD LOGIC ---
+        // --- SWIPE LOGIC ---
         let tX = 0, tY = 0, longPressTimer, isSwiping = false;
         function handleTouchStart(e, id) {
-            tX = e.touches[0].clientX; tY = e.touches[0].clientY;
-            isSwiping = false;
-            let card = document.getElementById(`card-${id}`);
-            card.style.transition = 'none'; // Bỏ transition lúc ngón tay đang giữ
-            
-            longPressTimer = setTimeout(() => {
-                if(!isSwiping) {
-                    if (navigator.vibrate) navigator.vibrate(50);
-                    openContextMenu(id);
-                }
-            }, 600);
+            tX = e.touches[0].clientX; tY = e.touches[0].clientY; isSwiping = false;
+            let card = document.getElementById(`card-${id}`); card.style.transition = 'none';
+            longPressTimer = setTimeout(() => { if(!isSwiping) { if (navigator.vibrate) navigator.vibrate(50); openContextMenu(id); } }, 600);
         }
         function handleTouchMove(e, id) {
-            let deltaX = e.touches[0].clientX - tX;
-            let deltaY = e.touches[0].clientY - tY;
-            if (Math.abs(deltaX) > 15 || Math.abs(deltaY) > 15) {
-                isSwiping = true; clearTimeout(longPressTimer);
-            }
-            // Chỉ animate nếu vuốt ngang mạnh hơn vuốt dọc
-            if (Math.abs(deltaX) > Math.abs(deltaY) + 10) {
-                let card = document.getElementById(`card-${id}`);
-                card.style.transform = `translateX(${deltaX * 0.5}px)`; // Di chuyển theo ngón tay nhẹ nhàng
-            }
+            let deltaX = e.touches[0].clientX - tX; let deltaY = e.touches[0].clientY - tY;
+            if (Math.abs(deltaX) > 15 || Math.abs(deltaY) > 15) { isSwiping = true; clearTimeout(longPressTimer); }
+            if (Math.abs(deltaX) > Math.abs(deltaY) + 10) document.getElementById(`card-${id}`).style.transform = `translateX(${deltaX * 0.5}px)`;
         }
         function handleTouchEnd(e, id) {
-            clearTimeout(longPressTimer);
-            let deltaX = e.changedTouches[0].clientX - tX;
+            clearTimeout(longPressTimer); let deltaX = e.changedTouches[0].clientX - tX;
             let card = document.getElementById(`card-${id}`);
-            card.style.transition = 'transform 0.2s'; // Bật lại transition để snap
-            card.style.transform = `translateX(0px)`;
-            
+            card.style.transition = 'transform 0.2s'; card.style.transform = `translateX(0px)`;
             if (!isSwiping) return;
-            
-            if (deltaX > 80) { // Vuốt phải -> Vali
-                card.classList.add('swiping-right');
-                setTimeout(() => { changeStatus(id, 'vali'); }, 150);
-            } else if (deltaX < -80) { // Vuốt trái -> Đang mua
-                card.classList.add('swiping-left');
-                setTimeout(() => { changeStatus(id, 'dangmua'); }, 150);
-            }
+            if (deltaX > 80) { card.classList.add('swiping-right'); setTimeout(() => { changeStatus(id, 'vali'); }, 150); }
+            else if (deltaX < -80) { card.classList.add('swiping-left'); setTimeout(() => { changeStatus(id, 'dangmua'); }, 150); }
         }
 
-        // --- LONG PRESS MENU ---
-        let currentContextId = null;
         function openContextMenu(id) {
-            currentContextId = id;
-            let item = items.find(i => i.id === id);
-            document.getElementById('ctxTitle').innerText = item.name;
+            let item = items.find(i => i.id === id); document.getElementById('ctxTitle').innerText = item.name;
             document.getElementById('longPressMenu').classList.remove('hidden');
             setTimeout(() => document.getElementById('longPressContent').classList.remove('translate-y-full'), 10);
-            
             document.getElementById('ctxEditBtn').onclick = () => { closeContextMenu(); openEditModal(id); };
-            document.getElementById('ctxDeleteBtn').onclick = () => {
-                items = items.filter(i => i.id !== id);
-                saveToStorage(); renderItems(); showToast("Đã xóa"); closeContextMenu();
-            };
+            document.getElementById('ctxDeleteBtn').onclick = () => { items = items.filter(i => i.id !== id); saveToStorage(); renderItems(); closeContextMenu(); };
         }
-        function closeContextMenu() {
-            document.getElementById('longPressContent').classList.add('translate-y-full');
-            setTimeout(() => document.getElementById('longPressMenu').classList.add('hidden'), 200);
-        }
-
-        function changeStatus(id, newStatus) {
-            let item = items.find(i => i.id === id);
-            if(item) { item.status = newStatus; item.checked = false; saveToStorage(); renderItems(); }
-        }
+        function closeContextMenu() { document.getElementById('longPressContent').classList.add('translate-y-full'); setTimeout(() => document.getElementById('longPressMenu').classList.add('hidden'), 200); }
+        function changeStatus(id, newStatus) { let item = items.find(i => i.id === id); if(item) { item.status = newStatus; item.checked = false; saveToStorage(); renderItems(); } }
 
         // --- RENDER ---
         function renderItems(searchText = "") {
-            const listEl = document.getElementById('itemList');
-            listEl.innerHTML = '';
-            
+            const listEl = document.getElementById('itemList'); listEl.innerHTML = '';
             let filteredItems = items.filter(i => i.status === currentTab);
             if(searchText) filteredItems = filteredItems.filter(i => i.name.toLowerCase().includes(searchText.toLowerCase()));
             if(currentFilterTag) filteredItems = filteredItems.filter(i => i.category === currentFilterTag);
@@ -421,15 +412,16 @@
             document.getElementById('batchActions').classList.replace(checkedCount > 0 ? 'hidden' : 'flex', checkedCount > 0 ? 'flex' : 'hidden');
 
             filteredItems.forEach((item, index) => {
-                let textClass = (item.checked && currentTab === 'vali') ? 'line-through-custom' : 'text-slate-800';
+                let isValiChecked = (item.checked && currentTab === 'vali');
+                let cardClass = isValiChecked ? "tg-card vali-checked p-3 flex gap-3 z-10" : "tg-card p-3 flex gap-3 z-10";
+                let textClass = isValiChecked ? 'line-through-custom text-slate-500' : 'text-slate-800';
+                
                 let warningHtml = item.warning ? `<div class="mt-2 text-[11px] text-red-600 bg-red-50 p-2 rounded-lg font-medium leading-snug"><i class="fa-solid fa-triangle-exclamation mr-1"></i>${item.warning}</div>` : '';
-
                 let aviaColor = "bg-slate-100 text-slate-600";
                 if(item.aviation.includes("Xách Tay") || item.aviation.includes("Xách tay")) aviaColor = "bg-blue-100 text-blue-700";
                 if(item.aviation.includes("Ký Gửi") || item.aviation.includes("Ký gửi")) aviaColor = "bg-emerald-100 text-emerald-700";
                 if(item.aviation.includes("CẤM")) aviaColor = "bg-red-100 text-red-700";
 
-                // Phân cấp màu giá tiền
                 let priceColor = 'text-blue-600';
                 if(item.price > 0) {
                     if (item.price < 50000) priceColor = 'text-emerald-500';
@@ -440,32 +432,23 @@
                 let bgIcon = catIcons[item.category] || "fa-box";
 
                 listEl.innerHTML += `
-                    <div class="tg-card p-3 flex gap-3 z-10" id="card-${item.id}"
-                         ontouchstart="handleTouchStart(event, ${item.id})" 
-                         ontouchmove="handleTouchMove(event, ${item.id})" 
-                         ontouchend="handleTouchEnd(event, ${item.id})">
-                        
+                    <div class="${cardClass}" id="card-${item.id}"
+                         ontouchstart="handleTouchStart(event, ${item.id})" ontouchmove="handleTouchMove(event, ${item.id})" ontouchend="handleTouchEnd(event, ${item.id})">
                         <i class="fa-solid ${bgIcon} bg-icon"></i>
-                        
                         <div class="flex flex-col items-center justify-between shrink-0 pt-1 pb-1 w-[24px] z-10">
                             <input type="checkbox" class="custom-checkbox" onchange="toggleCheckbox(${item.id})" ${item.checked ? 'checked' : ''}>
                             <span class="text-blue-600 font-black text-[13px] mt-4">#${index + 1}</span>
                         </div>
-                        
                         <div class="flex-1 min-w-0 z-10">
                             <div class="flex items-start gap-1.5">
                                 <h3 class="font-bold text-[15px] leading-tight ${textClass} break-words">${item.name}</h3>
                                 <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold shrink-0 mt-0.5">x${item.qty}</span>
                             </div>
-                            
                             ${item.price > 0 ? `<div class="text-[12px] font-bold ${priceColor} mt-0.5">${formatMoney(item.price)} đ <span class="text-[10px] text-slate-400 font-normal">/món</span></div>` : ''}
-                            
                             ${item.note ? `<p class="text-[12px] text-slate-500 mt-1 leading-snug italic">${item.note}</p>` : ''}
-                            
                             <div class="flex flex-wrap gap-1.5 mt-2">
                                 <span class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded border border-slate-200 text-slate-600">${item.category}</span>
                             </div>
-
                             <div class="border-t border-dashed border-slate-200 my-2"></div>
                             <div class="flex items-center gap-1">
                                 <i class="fa-solid fa-plane-departure text-[10px] text-slate-400"></i>
@@ -479,47 +462,19 @@
             updateSidebarTags();
         }
 
-        // --- CRUD LOGIC ---
-        function openAddModal() {
-            editingId = null; document.getElementById('modalTitle').innerText = "Thêm đồ mới";
-            document.getElementById('itemName').value = ''; document.getElementById('itemQty').value = '1'; document.getElementById('itemPrice').value = '';
-            document.getElementById('addModal').classList.remove('hidden');
-        }
-        function openEditModal(id) {
-            editingId = id; let item = items.find(i => i.id === id);
-            document.getElementById('modalTitle').innerText = "Sửa thông tin";
-            document.getElementById('itemName').value = item.name; document.getElementById('itemQty').value = item.qty;
-            document.getElementById('itemPrice').value = item.price > 0 ? formatMoney(item.price) : '';
-            document.getElementById('addModal').classList.remove('hidden');
-        }
+        function openAddModal() { editingId = null; document.getElementById('modalTitle').innerText = "Thêm đồ mới"; document.getElementById('itemName').value = ''; document.getElementById('itemQty').value = '1'; document.getElementById('itemPrice').value = ''; document.getElementById('addModal').classList.remove('hidden'); }
+        function openEditModal(id) { editingId = id; let item = items.find(i => i.id === id); document.getElementById('modalTitle').innerText = "Sửa thông tin"; document.getElementById('itemName').value = item.name; document.getElementById('itemQty').value = item.qty; document.getElementById('itemPrice').value = item.price > 0 ? formatMoney(item.price) : ''; document.getElementById('addModal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('addModal').classList.add('hidden'); }
 
         function saveItem() {
-            let name = document.getElementById('itemName').value.trim();
-            let qty = document.getElementById('itemQty').value || 1;
-            let priceStr = document.getElementById('itemPrice').value.replace(/,/g, '');
-            let price = priceStr ? Number(priceStr) : 0;
-            if(!name) return;
-
-            let autoData = autoCategorize(name);
-
-            if (editingId) {
-                let itemIndex = items.findIndex(i => i.id === editingId);
-                if(itemIndex > -1) {
-                    items[itemIndex].name = name; items[itemIndex].qty = Number(qty); items[itemIndex].price = price;
-                    items[itemIndex].category = autoData.category; items[itemIndex].aviation = autoData.aviation;
-                    items[itemIndex].note = autoData.note; items[itemIndex].warning = autoData.warning;
-                }
-            } else {
-                items.unshift({
-                    id: Date.now(), name: name, qty: Number(qty), price: price,
-                    category: autoData.category, aviation: autoData.aviation, note: autoData.note,
-                    status: 'kho', warning: autoData.warning, checked: false
-                });
-            }
+            let name = document.getElementById('itemName').value.trim(); let qty = document.getElementById('itemQty').value || 1; let priceStr = document.getElementById('itemPrice').value.replace(/,/g, ''); let price = priceStr ? Number(priceStr) : 0;
+            if(!name) return; let autoData = autoCategorize(name);
+            if (editingId) { let itemIndex = items.findIndex(i => i.id === editingId); if(itemIndex > -1) { items[itemIndex].name = name; items[itemIndex].qty = Number(qty); items[itemIndex].price = price; items[itemIndex].category = autoData.category; items[itemIndex].aviation = autoData.aviation; items[itemIndex].note = autoData.note; items[itemIndex].warning = autoData.warning; } } 
+            else { items.unshift({ id: Date.now(), name: name, qty: Number(qty), price: price, category: autoData.category, aviation: autoData.aviation, note: autoData.note, status: 'kho', warning: autoData.warning, checked: false }); }
             saveToStorage(); closeModal(); renderItems();
         }
 
+        // --- PUSH SIDEBAR LOGIC ---
         function updateSidebarTags() {
             const listEl = document.getElementById('sidebarTagList');
             const lazadaCats = ["Dành riêng cho bạn", "Thiết Bị Điện Tử", "Phụ Kiện Điện Tử", "Sức Khỏe & Làm Đẹp", "Siêu Thị Tạp Hóa", "Hàng Gia dụng & Đời sống", "Thời trang & Phụ kiện", "Thể Thao & Du Lịch"];
@@ -531,32 +486,27 @@
         }
         function filterByTag(tag) { currentFilterTag = tag; toggleSidebar(); renderItems(); }
 
-        const sidebar = document.getElementById('sidebarOverlay');
-        const sidebarContent = document.getElementById('sidebarContent');
+        const sidebar = document.getElementById('sidebar');
         function toggleSidebar() {
-            if(sidebar.classList.contains('hidden')) {
-                sidebar.classList.remove('hidden'); setTimeout(() => sidebarContent.classList.remove('-translate-x-full'), 10);
-            } else {
-                sidebarContent.classList.add('-translate-x-full'); setTimeout(() => sidebar.classList.add('hidden'), 300);
-            }
+            if(sidebar.classList.contains('w-0')) sidebar.classList.replace('w-0', 'w-[200px]');
+            else sidebar.classList.replace('w-[200px]', 'w-0');
         }
         document.getElementById('searchInput').addEventListener('input', (e) => renderItems(e.target.value));
 
-        // --- EXPORT & SYNC FEATURES ---
+        // --- EXPORT FEATURES ---
         function exportCopy() {
             if(items.length === 0) return showToast("Không có dữ liệu!");
-            let text = items.map(i => `${i.name} x${i.qty}`).join('\n');
-            navigator.clipboard.writeText(text).then(() => showToast("Đã copy vào bộ nhớ đệm!"));
+            let text = items.map(i => `${i.name} x${i.qty}`).join('\n'); // Nằm riêng từng dòng
+            navigator.clipboard.writeText(text).then(() => showToast("Đã copy thành công!"));
         }
 
         function exportDoc() {
             if(items.length === 0) return showToast("Không có dữ liệu!");
             let html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'></head><body><h3>Danh sách hành lý</h3><ul>";
-            items.forEach(i => html += `<li>${i.name} x${i.qty} (${i.category} - ${i.aviation})</li>`);
+            items.forEach(i => html += `<li>${i.name} x${i.qty}</li>`);
             html += "</ul></body></html>";
             let blob = new Blob(['\ufeff', html], { type: 'application/msword' });
-            let link = document.createElement("a");
-            link.href = URL.createObjectURL(blob); link.download = "Packify_HanhLy.doc"; link.click();
+            let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Packify_HanhLy.doc"; link.click();
         }
 
         function exportCSV() {
@@ -564,54 +514,10 @@
             let csv = '\uFEFFTên,Số lượng,Giá tiền,Danh mục,Tag Hàng Không\n';
             items.forEach(i => csv += `"${i.name}",${i.qty},${i.price},"${i.category}","${i.aviation}"\n`);
             let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            let link = document.createElement("a");
-            link.href = URL.createObjectURL(blob); link.download = "Packify_HanhLy.csv"; link.click();
+            let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Packify_HanhLy.csv"; link.click();
         }
 
-        async function callWorker(payload) {
-            let opts = { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) };
-            const res = await fetch(WORKER_URL, opts);
-            if(!res.ok) throw new Error("Lỗi kết nối");
-            return await res.json();
-        }
-
-        async function syncCloud(action) {
-            const pass = document.getElementById('syncPassInput').value;
-            if(!pass) return showToast('Vui lòng nhập mã Sync!');
-            localStorage.setItem('sync_pass', pass);
-            showToast('Đang kết nối Cloud...');
-            try {
-                const res = await callWorker({ 
-                    action: action === 'save' ? 'sync_save' : 'sync_load',
-                    sync_pass: pass,
-                    data: action === 'save' ? { vault: items } : null // Gửi items lên với key là vault để khớp code mẫu của bà
-                });
-
-                if(res.success) {
-                    if(action === 'load' && res.data) {
-                        items = Array.isArray(res.data) ? res.data : (res.data.vault || []);
-                        saveToStorage(); renderItems();
-                    }
-                    const t = new Date().toLocaleString('vi-VN');
-                    localStorage.setItem('last_sync_time', t);
-                    document.getElementById('lastSyncTime').innerText = t;
-                    showToast(action === 'save' ? 'Lưu thành công!' : 'Tải dữ liệu thành công!');
-                } else { showToast('Mã Sync sai hoặc lỗi!'); }
-            } catch(e) { showToast('Lỗi mạng, thử lại sau!'); }
-        }
-
-        async function deleteCloudData() {
-            const pass = document.getElementById('syncPassInput').value;
-            if(!pass) return showToast('Chưa nhập mã Sync');
-            if(!confirm("Xóa sạch dữ liệu trên Cloud?")) return;
-            try {
-                const res = await callWorker({ action: 'sync_delete', sync_pass: pass });
-                if(res.success) showToast('Đã xóa dữ liệu trên Cloud');
-            } catch(e) { showToast('Lỗi xóa Cloud'); }
-        }
-
-        updateProgress();
-        renderItems();
+        updateProgress(); renderItems();
     </script>
 </body>
 </html>
