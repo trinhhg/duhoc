@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Packify Pro v12.1</title>
+    <title>Packify Pro v13</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -45,20 +45,23 @@
         #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 600; display: none; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); text-align: center; }
     </style>
 </head>
-<body class="flex w-full">
+<body class="flex flex-col w-full h-full">
 
     <div id="toast">Thông báo</div>
 
-    <aside id="sidebar" class="w-0 flex-shrink-0 bg-white border-r border-slate-200 transition-[width] duration-300 ease-in-out overflow-hidden z-20">
-        <div class="w-[260px] h-full flex flex-col">
-            <div class="p-4 border-b border-slate-100 flex items-center gap-2">
-                <i class="fa-solid fa-tags text-blue-500 text-xl"></i><h2 class="text-lg font-bold text-slate-800">Danh Mục</h2>
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-50 hidden transition-opacity" onclick="toggleSidebar()">
+        <div id="sidebarContent" class="w-[280px] bg-white h-full transform -translate-x-full transition-transform duration-300 flex flex-col shadow-2xl" onclick="event.stopPropagation()">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-tags text-blue-500 text-xl"></i><h2 class="text-lg font-bold text-slate-800">Danh Mục</h2>
+                </div>
+                <button onclick="toggleSidebar()" class="text-slate-400 text-xl w-8 h-8"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-2" id="sidebarTagList"></div>
+            <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-2" id="sidebarTagList"></div>
         </div>
-    </aside>
+    </div>
 
-    <div id="mainApp" class="flex-1 flex flex-col min-w-0 bg-[#f3f4f6] relative h-full transition-all duration-300">
+    <div id="mainApp" class="flex-1 flex flex-col min-w-0 relative h-full">
         
         <header class="bg-white px-4 py-3 shadow-sm z-10 flex-shrink-0 flex flex-col gap-3 relative" id="mainHeader">
             <div class="flex items-center gap-3">
@@ -177,25 +180,25 @@
         </div>
     </div>
 
-    <div id="addModal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-start pt-[15vh] px-4" onclick="if(event.target === this) closeModal()">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl" id="modalContent">
-            <div class="flex justify-between items-center mb-5">
-                <h3 class="text-xl font-bold" id="modalTitle">Thêm đồ mới</h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 text-2xl w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+    <div id="addModal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-start pt-[6vh] px-4" onclick="if(event.target === this) closeModal()">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl" id="modalContent">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-lg font-bold" id="modalTitle">Thêm đồ mới</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 text-xl w-8 h-8 flex items-center justify-center bg-slate-50 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <input type="text" id="itemName" placeholder="VD: Hộ chiếu, Quần áo..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-4 text-base focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 font-medium transition-all">
-            <div class="flex gap-3 mb-5">
-                <div class="flex items-center justify-between bg-slate-50 rounded-xl px-1 w-[120px] shrink-0 border border-slate-200">
-                    <button type="button" onclick="adjustQty(-1)" class="w-10 h-12 text-slate-500 font-bold text-2xl active:text-blue-500">-</button>
-                    <input type="number" id="itemQty" value="1" class="w-8 text-center bg-transparent focus:outline-none text-base font-bold p-0" readonly>
-                    <button type="button" onclick="adjustQty(1)" class="w-10 h-12 text-slate-500 font-bold text-xl active:text-blue-500">+</button>
+            <input type="text" id="itemName" placeholder="VD: Hộ chiếu, Quần áo..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mb-3 text-[15px] focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 font-medium transition-all">
+            <div class="flex gap-2 mb-4">
+                <div class="flex items-center justify-between bg-slate-50 rounded-xl px-1 w-[110px] shrink-0 border border-slate-200">
+                    <button type="button" onclick="adjustQty(-1)" class="w-10 h-11 text-slate-500 font-bold text-xl active:text-blue-500">-</button>
+                    <input type="number" id="itemQty" value="1" class="w-8 text-center bg-transparent focus:outline-none text-[15px] font-bold p-0" readonly>
+                    <button type="button" onclick="adjustQty(1)" class="w-10 h-11 text-slate-500 font-bold text-lg active:text-blue-500">+</button>
                 </div>
                 <div class="relative flex-1">
-                    <input type="text" id="itemPrice" placeholder="Giá tiền" oninput="formatPriceInput(event)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 pr-8 text-base focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 text-right font-bold transition-all">
+                    <input type="text" id="itemPrice" placeholder="Giá tiền" oninput="formatPriceInput(event)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pr-8 text-[15px] focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 text-right font-bold transition-all">
                     <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 font-bold">đ</span>
                 </div>
             </div>
-            <button id="submitBtn" onclick="saveItem()" class="w-full bg-blue-500 text-white font-bold text-lg py-3.5 rounded-xl hover:bg-blue-600 active:scale-95 transition-transform shadow-md shadow-blue-500/30">Lưu vào kho</button>
+            <button id="submitBtn" onclick="saveItem()" class="w-full bg-blue-500 text-white font-bold text-[16px] py-3 rounded-xl hover:bg-blue-600 active:scale-95 transition-transform shadow-md shadow-blue-500/30">Lưu vào kho</button>
         </div>
     </div>
 
@@ -335,14 +338,11 @@
                 document.getElementById('settingsContent').style.display = 'none';
                 document.getElementById('progressWrapper').style.display = (tab === 'vali') ? 'block' : 'none';
                 
-                // ĐÂY RỒI - FIX HIỂN THỊ PRICE BAR
                 let pb = document.getElementById('priceBar');
                 if (tab === 'dangmua' || tab === 'vali') {
-                    pb.classList.remove('hidden');
-                    pb.style.display = 'flex';
+                    pb.classList.remove('hidden'); pb.style.display = 'flex';
                 } else {
-                    pb.classList.add('hidden');
-                    pb.style.display = 'none';
+                    pb.classList.add('hidden'); pb.style.display = 'none';
                 }
                 
                 document.getElementById('selectAllCheckbox').checked = false;
@@ -373,17 +373,20 @@
             document.getElementById('selectAllCheckbox').checked = false; saveToStorage(); renderItems();
         }
 
-        let startX = 0, startY = 0, currentX = 0, isDragging = false, longPressTimer;
+        // --- SWIPE LOGIC CHUẨN MỰC MỚI ---
+        let startX = 0, startY = 0, currentX = 0, isDragging = false, isSwiping = false, longPressTimer;
         
         function getClientX(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
         function getClientY(e) { return e.touches ? e.touches[0].clientY : e.clientY; }
 
         function handleStart(e, id) {
             if (e.target.closest('input') || e.target.closest('button')) return; 
-            startX = getClientX(e); startY = getClientY(e); isDragging = true; currentX = 0;
+            startX = getClientX(e); startY = getClientY(e); 
+            isDragging = true; isSwiping = false; currentX = 0;
             let card = document.getElementById(`card-${id}`); card.style.transition = 'none';
+            
             longPressTimer = setTimeout(() => {
-                if (Math.abs(currentX) < 10 && isDragging) {
+                if (!isSwiping && isDragging) {
                     isDragging = false; if (navigator.vibrate) navigator.vibrate(50); openContextMenu(id);
                 }
             }, 500);
@@ -392,8 +395,20 @@
         function handleMove(e, id) {
             if (!isDragging) return;
             let deltaX = getClientX(e) - startX; let deltaY = getClientY(e) - startY;
+            
             if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) clearTimeout(longPressTimer);
-            if (Math.abs(deltaX) > Math.abs(deltaY) + 5) {
+            
+            // Tách biệt Vuốt ngang và Cuộn dọc
+            if (!isSwiping) {
+                if (Math.abs(deltaX) > Math.abs(deltaY) + 5) {
+                    isSwiping = true; // Là vuốt ngang
+                } else if (Math.abs(deltaY) > 10) {
+                    isDragging = false; // Là cuộn dọc, hủy vuốt
+                    return;
+                }
+            }
+
+            if (isSwiping) {
                 currentX = deltaX;
                 document.getElementById(`card-${id}`).style.transform = `translateX(${currentX}px)`;
                 if (currentX > 0) {
@@ -411,15 +426,21 @@
             isDragging = false; clearTimeout(longPressTimer);
             let card = document.getElementById(`card-${id}`);
 
-            if (Math.abs(currentX) < 10) {
+            if (!isSwiping) {
+                // CHẠM (TAP) BÌNH THƯỜNG
                 card.style.transform = `translateX(0px)`;
                 if (!e.target.closest('button') && !e.target.closest('input')) toggleCheckbox(id);
-            } else if (currentX > 80) { 
+                return;
+            }
+
+            // KẾT THÚC VUỐT (SWIPE)
+            card.style.transition = 'transform 0.25s ease';
+            if (currentX > 80) { 
                 card.style.transform = `translateX(150%)`; setTimeout(() => changeStatus(id, 'vali'), 200);
             } else if (currentX < -80) { 
                 card.style.transform = `translateX(-150%)`; setTimeout(() => changeStatus(id, 'dangmua'), 200);
             } else { 
-                card.style.transition = 'transform 0.2s'; card.style.transform = `translateX(0px)`;
+                card.style.transform = `translateX(0px)`;
                 document.getElementById(`bg-left-${id}`).style.opacity = 0; document.getElementById(`bg-right-${id}`).style.opacity = 0;
             }
             currentX = 0;
@@ -443,7 +464,7 @@
             if(searchText) filteredItems = filteredItems.filter(i => i.name.toLowerCase().includes(searchText));
             if(currentFilterTag) filteredItems = filteredItems.filter(i => i.category === currentFilterTag);
 
-            if (currentTab !== 'kho') filteredItems.sort((a, b) => a.category.localeCompare(b.category));
+            if (currentTab !== 'kho') filteredItems.sort((a, b) => (a.category || "").localeCompare(b.category || ""));
 
             document.getElementById('badge-kho').innerText = items.filter(i => i.status === 'kho').length;
             document.getElementById('badge-dangmua').innerText = items.filter(i => i.status === 'dangmua').length;
@@ -488,7 +509,7 @@
                             
                             <i class="fa-solid ${bgIcon} bg-icon"></i>
                             
-                            <div class="flex flex-col items-center justify-between shrink-0 pt-1 pb-1 w-[24px] z-10 relative">
+                            <div class="flex flex-col items-center justify-between shrink-0 pt-1 pb-1 w-[24px] z-10 relative pointer-events-none">
                                 <input type="checkbox" class="custom-checkbox" ${item.checked ? 'checked' : ''}>
                                 <span class="text-blue-600 font-black text-[14px] mt-4">#${index + 1}</span>
                             </div>
@@ -514,7 +535,6 @@
                     </div>
                 `;
             });
-            updateSidebarTags();
         }
 
         function openAddModal() { editingId = null; document.getElementById('modalTitle').innerText = "Thêm đồ mới"; document.getElementById('itemName').value = ''; document.getElementById('itemQty').value = '1'; document.getElementById('itemPrice').value = ''; document.getElementById('addModal').classList.remove('hidden'); }
@@ -524,10 +544,8 @@
         function saveItem() {
             let name = document.getElementById('itemName').value.trim(); let qty = document.getElementById('itemQty').value || 1; let priceStr = document.getElementById('itemPrice').value.replace(/,/g, ''); let price = priceStr ? Number(priceStr) : 0;
             if(!name) return; 
-
             let isDuplicate = items.some(i => i.name.toLowerCase() === name.toLowerCase() && i.id !== editingId);
             if(isDuplicate) { showToast("⚠️ Món đồ này đã tồn tại trong danh sách!"); return; }
-
             let autoData = autoCategorize(name);
             if (editingId) { let itemIndex = items.findIndex(i => i.id === editingId); if(itemIndex > -1) { items[itemIndex].name = name; items[itemIndex].qty = Number(qty); items[itemIndex].price = price; items[itemIndex].category = autoData.category; items[itemIndex].aviation = autoData.aviation; items[itemIndex].note = autoData.note; items[itemIndex].warning = autoData.warning; } } 
             else { items.unshift({ id: Date.now(), name: name, qty: Number(qty), price: price, category: autoData.category, aviation: autoData.aviation, note: autoData.note, status: 'kho', warning: autoData.warning, checked: false }); }
@@ -537,46 +555,58 @@
         function updateSidebarTags() {
             const listEl = document.getElementById('sidebarTagList');
             const lazadaCats = ["Dành riêng cho bạn", "Thiết Bị Điện Tử", "Phụ Kiện Điện Tử", "Sức Khỏe & Làm Đẹp", "Siêu Thị Tạp Hóa", "Hàng Gia dụng & Đời sống", "Thời trang & Phụ kiện", "Thể Thao & Du Lịch"];
-            listEl.innerHTML = `<button onclick="filterByTag('')" class="text-left px-3 py-3 rounded-lg ${currentFilterTag === '' ? 'bg-blue-50 text-blue-600 font-bold' : 'bg-slate-50 text-slate-700 font-medium'} text-sm">Hiển thị tất cả</button>`;
+            listEl.innerHTML = `<button onclick="filterByTag('')" class="text-left px-4 py-3 rounded-xl ${currentFilterTag === '' ? 'bg-blue-50 text-blue-600 font-bold' : 'bg-slate-50 text-slate-700 font-medium'} text-sm transition-colors">Hiển thị tất cả</button>`;
             lazadaCats.forEach(tag => {
                 let activeClass = currentFilterTag === tag ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-600 hover:bg-slate-50';
-                listEl.innerHTML += `<button onclick="filterByTag('${tag}')" class="text-left px-3 py-3 rounded-lg text-sm font-medium ${activeClass}">${tag}</button>`;
+                listEl.innerHTML += `<button onclick="filterByTag('${tag}')" class="text-left px-4 py-3 rounded-xl text-sm font-medium ${activeClass} transition-colors">${tag}</button>`;
             });
         }
-        function filterByTag(tag) { currentFilterTag = tag; renderItems(); }
+        function filterByTag(tag) { currentFilterTag = tag; toggleSidebar(); renderItems(); }
         
-        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const sidebarContent = document.getElementById('sidebarContent');
         function toggleSidebar() {
-            if(sidebar.classList.contains('w-0')) sidebar.classList.replace('w-0', 'w-[260px]');
-            else sidebar.classList.replace('w-[260px]', 'w-0');
+            if (sidebarOverlay.classList.contains('hidden')) {
+                sidebarOverlay.classList.remove('hidden');
+                setTimeout(() => sidebarContent.classList.remove('-translate-x-full'), 10);
+            } else {
+                sidebarContent.classList.add('-translate-x-full');
+                setTimeout(() => sidebarOverlay.classList.add('hidden'), 300);
+            }
         }
 
         function getExportData() {
             let filteredItems = items.filter(i => i.status === currentTab);
             if(currentFilterTag) filteredItems = filteredItems.filter(i => i.category === currentFilterTag);
-            if(currentTab !== 'kho') filteredItems.sort((a, b) => a.category.localeCompare(b.category));
+            if(currentTab !== 'kho') filteredItems.sort((a, b) => (a.category || "").localeCompare(b.category || ""));
             return filteredItems;
         }
 
         function exportCopy() {
-            let data = getExportData(); if(data.length === 0) return showToast("Không có dữ liệu!");
-            let text = data.map((i, idx) => `${idx + 1}. ${i.name} x${i.qty}`).join('\n');
-            navigator.clipboard.writeText(text).then(() => showToast("Đã copy thành công!"));
+            try {
+                let data = getExportData(); if(data.length === 0) return showToast("Không có dữ liệu!");
+                let text = data.map((i, idx) => `${idx + 1}. ${i.name} x${i.qty}`).join('\n');
+                navigator.clipboard.writeText(text).then(() => showToast("Đã copy thành công!")).catch(() => showToast("Trình duyệt chặn Copy"));
+            } catch(e) { showToast("Lỗi Export: " + e.message); }
         }
         function exportDoc() {
-            let data = getExportData(); if(data.length === 0) return showToast("Không có dữ liệu!");
-            let html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'></head><body><h3>Danh sách hành lý</h3><ul>";
-            data.forEach((i, idx) => html += `<li style="list-style-type: none;">${idx + 1}. ${i.name} x${i.qty}</li>`);
-            html += "</ul></body></html>";
-            let blob = new Blob(['\ufeff', html], { type: 'application/msword' });
-            let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Packify_HanhLy.doc"; link.click();
+            try {
+                let data = getExportData(); if(data.length === 0) return showToast("Không có dữ liệu!");
+                let html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'></head><body><h3>Danh sách hành lý</h3><ul>";
+                data.forEach((i, idx) => html += `<li style="list-style-type: none;">${idx + 1}. ${i.name} x${i.qty}</li>`);
+                html += "</ul></body></html>";
+                let blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+                let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Packify_HanhLy.doc"; link.click();
+            } catch(e) { showToast("Lỗi xuất file!"); }
         }
         function exportCSV() {
-            let data = getExportData(); if(data.length === 0) return showToast("Không có dữ liệu!");
-            let csv = '\uFEFFSTT,Tên,Số lượng,Giá tiền,Danh mục,Tag Hàng Không\n';
-            data.forEach((i, idx) => csv += `${idx + 1},"${i.name}",${i.qty},${i.price},"${i.category}","${i.aviation}"\n`);
-            let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Packify_HanhLy.csv"; link.click();
+            try {
+                let data = getExportData(); if(data.length === 0) return showToast("Không có dữ liệu!");
+                let csv = '\uFEFFSTT,Tên,Số lượng,Giá tiền,Danh mục,Tag Hàng Không\n';
+                data.forEach((i, idx) => csv += `${idx + 1},"${i.name}",${i.qty},${i.price},"${i.category}","${i.aviation}"\n`);
+                let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Packify_HanhLy.csv"; link.click();
+            } catch(e) { showToast("Lỗi xuất file!"); }
         }
     </script>
 </body>
