@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Packify Pro v13</title>
+    <title>Packify Pro v12</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -45,23 +45,20 @@
         #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 600; display: none; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); text-align: center; }
     </style>
 </head>
-<body class="flex flex-col w-full h-full">
+<body class="flex w-full">
 
     <div id="toast">Thông báo</div>
 
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-50 hidden transition-opacity" onclick="toggleSidebar()">
-        <div id="sidebarContent" class="w-[280px] bg-white h-full transform -translate-x-full transition-transform duration-300 flex flex-col shadow-2xl" onclick="event.stopPropagation()">
-            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-tags text-blue-500 text-xl"></i><h2 class="text-lg font-bold text-slate-800">Danh Mục</h2>
-                </div>
-                <button onclick="toggleSidebar()" class="text-slate-400 text-xl w-8 h-8"><i class="fa-solid fa-xmark"></i></button>
+    <aside id="sidebar" class="w-0 flex-shrink-0 bg-white border-r border-slate-200 transition-[width] duration-300 ease-in-out overflow-hidden z-20">
+        <div class="w-[260px] h-full flex flex-col">
+            <div class="p-4 border-b border-slate-100 flex items-center gap-2">
+                <i class="fa-solid fa-tags text-blue-500 text-xl"></i><h2 class="text-lg font-bold text-slate-800">Danh Mục</h2>
             </div>
-            <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-2" id="sidebarTagList"></div>
+            <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-2" id="sidebarTagList"></div>
         </div>
-    </div>
+    </aside>
 
-    <div id="mainApp" class="flex-1 flex flex-col min-w-0 relative h-full">
+    <div id="mainApp" class="flex-1 flex flex-col min-w-0 bg-[#f3f4f6] relative h-full transition-all duration-300">
         
         <header class="bg-white px-4 py-3 shadow-sm z-10 flex-shrink-0 flex flex-col gap-3 relative" id="mainHeader">
             <div class="flex items-center gap-3">
@@ -100,11 +97,6 @@
                 <button onclick="batchAction('vali')" class="text-emerald-500 bg-emerald-50 px-2 py-1.5 rounded text-xs font-bold hover:bg-emerald-100"><i class="fa-solid fa-suitcase"></i> Cất</button>
                 <button onclick="batchAction('delete')" class="text-red-500 bg-red-50 px-2 py-1.5 rounded text-xs font-bold hover:bg-red-100"><i class="fa-solid fa-trash"></i></button>
             </div>
-        </div>
-
-        <div id="priceBar" class="bg-blue-50 text-blue-800 px-4 py-2 flex justify-between items-center text-sm font-bold border-b border-blue-100 hidden shrink-0">
-            <span><i class="fa-solid fa-receipt mr-1"></i> Tổng chi phí:</span>
-            <span id="totalPriceDisplay" class="text-blue-600 text-base">0 đ</span>
         </div>
 
         <main class="flex-1 overflow-y-auto p-4 relative" id="mainContent">
@@ -180,25 +172,25 @@
         </div>
     </div>
 
-    <div id="addModal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-start pt-[6vh] px-4" onclick="if(event.target === this) closeModal()">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl" id="modalContent">
-            <div class="flex justify-between items-center mb-3">
-                <h3 class="text-lg font-bold" id="modalTitle">Thêm đồ mới</h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 text-xl w-8 h-8 flex items-center justify-center bg-slate-50 rounded-full"><i class="fa-solid fa-xmark"></i></button>
+    <div id="addModal" class="fixed inset-0 bg-black/60 z-50 hidden flex justify-center items-start pt-[15vh] px-4" onclick="if(event.target === this) closeModal()">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl" id="modalContent">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-xl font-bold" id="modalTitle">Thêm đồ mới</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 text-2xl w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <input type="text" id="itemName" placeholder="VD: Hộ chiếu, Quần áo..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mb-3 text-[15px] focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 font-medium transition-all">
-            <div class="flex gap-2 mb-4">
-                <div class="flex items-center justify-between bg-slate-50 rounded-xl px-1 w-[110px] shrink-0 border border-slate-200">
-                    <button type="button" onclick="adjustQty(-1)" class="w-10 h-11 text-slate-500 font-bold text-xl active:text-blue-500">-</button>
-                    <input type="number" id="itemQty" value="1" class="w-8 text-center bg-transparent focus:outline-none text-[15px] font-bold p-0" readonly>
-                    <button type="button" onclick="adjustQty(1)" class="w-10 h-11 text-slate-500 font-bold text-lg active:text-blue-500">+</button>
+            <input type="text" id="itemName" placeholder="VD: Hộ chiếu, Quần áo..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-4 text-base focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 font-medium transition-all">
+            <div class="flex gap-3 mb-5">
+                <div class="flex items-center justify-between bg-slate-50 rounded-xl px-1 w-[120px] shrink-0 border border-slate-200">
+                    <button type="button" onclick="adjustQty(-1)" class="w-10 h-12 text-slate-500 font-bold text-2xl active:text-blue-500">-</button>
+                    <input type="number" id="itemQty" value="1" class="w-8 text-center bg-transparent focus:outline-none text-base font-bold p-0" readonly>
+                    <button type="button" onclick="adjustQty(1)" class="w-10 h-12 text-slate-500 font-bold text-xl active:text-blue-500">+</button>
                 </div>
                 <div class="relative flex-1">
-                    <input type="text" id="itemPrice" placeholder="Giá tiền" oninput="formatPriceInput(event)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pr-8 text-[15px] focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 text-right font-bold transition-all">
+                    <input type="text" id="itemPrice" placeholder="Giá tiền" oninput="formatPriceInput(event)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 pr-8 text-base focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 text-right font-bold transition-all">
                     <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 font-bold">đ</span>
                 </div>
             </div>
-            <button id="submitBtn" onclick="saveItem()" class="w-full bg-blue-500 text-white font-bold text-[16px] py-3 rounded-xl hover:bg-blue-600 active:scale-95 transition-transform shadow-md shadow-blue-500/30">Lưu vào kho</button>
+            <button id="submitBtn" onclick="saveItem()" class="w-full bg-blue-500 text-white font-bold text-lg py-3.5 rounded-xl hover:bg-blue-600 active:scale-95 transition-transform shadow-md shadow-blue-500/30">Lưu vào kho</button>
         </div>
     </div>
 
@@ -237,16 +229,26 @@
         function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
         function formatDateTime() { let d = new Date(); return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')} - ${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`; }
 
+        // --- ANTI DUPLICATION (Khử trùng dữ liệu tự động lúc load) ---
         function cleanDuplicates() {
-            let seen = new Set(); let cleanItems = [];
+            let seen = new Set();
+            let cleanItems = [];
             for(let i of items) {
                 let lowerName = i.name.toLowerCase().trim();
-                if(!seen.has(lowerName)) { seen.add(lowerName); cleanItems.push(i); }
+                if(!seen.has(lowerName)) {
+                    seen.add(lowerName);
+                    cleanItems.push(i);
+                }
             }
-            if(cleanItems.length !== items.length) { items = cleanItems; localStorage.setItem('packify_data', JSON.stringify(items)); }
+            if(cleanItems.length !== items.length) {
+                items = cleanItems;
+                localStorage.setItem('packify_data', JSON.stringify(items));
+            }
         }
 
-        let syncInterval = null; let lastPushedString = JSON.stringify(items); let isSyncing = false; 
+        // --- SYNC LOGIC (Sửa lỗi Race Condition) ---
+        let syncInterval = null; let lastPushedString = JSON.stringify(items);
+        let isSyncing = false; // Khóa chống xung đột
 
         async function callWorker(payload) {
             let opts = { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) };
@@ -271,11 +273,13 @@
             } catch(e) {
                 document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Lỗi mạng`;
                 document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud-xmark text-red-500";
-            } finally { isSyncing = false; }
+            } finally {
+                isSyncing = false;
+            }
         }
 
         async function pollCloud() {
-            if(isSyncing) return;
+            if(isSyncing) return; // Nếu đang đẩy dữ liệu hoặc đang lưu thì không kéo về
             let pass = localStorage.getItem('sync_pass'); if(!pass) return;
             try {
                 let res = await callWorker({ action: 'sync_load', sync_pass: pass });
@@ -311,15 +315,16 @@
         function saveToStorage() { localStorage.setItem('packify_data', JSON.stringify(items)); updateProgress(); pushToCloud(); }
 
         window.onload = () => { 
-            cleanDuplicates(); 
+            cleanDuplicates(); // Quét rác khi mới tải app
             let pass = localStorage.getItem('sync_pass'); 
             if(pass) { document.getElementById('syncPassInput').value = pass; startAutoSync(); } 
             renderItems();
         };
 
+        // --- TAB & BATCH ---
         function switchTab(tab) {
             currentTab = tab;
-            currentFilterTag = ''; 
+            currentFilterTag = ''; // RESET BỘ LỌC KHI CHUYỂN TAB ĐỂ TRÁNH TRỐNG TRƠN
             
             document.querySelectorAll('.nav-btn').forEach(el => { el.classList.remove('text-blue-500'); el.classList.add('text-slate-400'); });
             document.getElementById(`tab-${tab}`).classList.replace('text-slate-400', 'text-blue-500');
@@ -328,8 +333,6 @@
                 document.getElementById('mainContent').style.display = 'none';
                 document.getElementById('batchBar').style.display = 'none';
                 document.getElementById('progressWrapper').style.display = 'none';
-                document.getElementById('priceBar').classList.add('hidden');
-                document.getElementById('priceBar').style.display = 'none';
                 document.getElementById('settingsContent').style.display = 'block';
                 document.getElementById('lastSyncTime').innerText = localStorage.getItem('last_sync_time') || "Chưa đồng bộ";
             } else {
@@ -337,13 +340,6 @@
                 document.getElementById('batchBar').style.display = 'flex';
                 document.getElementById('settingsContent').style.display = 'none';
                 document.getElementById('progressWrapper').style.display = (tab === 'vali') ? 'block' : 'none';
-                
-                let pb = document.getElementById('priceBar');
-                if (tab === 'dangmua' || tab === 'vali') {
-                    pb.classList.remove('hidden'); pb.style.display = 'flex';
-                } else {
-                    pb.classList.add('hidden'); pb.style.display = 'none';
-                }
                 
                 document.getElementById('selectAllCheckbox').checked = false;
                 items.forEach(i => i.checked = false); 
@@ -373,20 +369,18 @@
             document.getElementById('selectAllCheckbox').checked = false; saveToStorage(); renderItems();
         }
 
-        // --- SWIPE LOGIC CHUẨN MỰC MỚI ---
-        let startX = 0, startY = 0, currentX = 0, isDragging = false, isSwiping = false, longPressTimer;
+        // --- SWIPE LOGIC ---
+        let startX = 0, startY = 0, currentX = 0, isDragging = false, longPressTimer;
         
         function getClientX(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
         function getClientY(e) { return e.touches ? e.touches[0].clientY : e.clientY; }
 
         function handleStart(e, id) {
-            if (e.target.closest('input') || e.target.closest('button')) return; 
-            startX = getClientX(e); startY = getClientY(e); 
-            isDragging = true; isSwiping = false; currentX = 0;
+            if (e.target.closest('input') || e.target.closest('button')) return; // Bỏ qua nếu ấn nút
+            startX = getClientX(e); startY = getClientY(e); isDragging = true; currentX = 0;
             let card = document.getElementById(`card-${id}`); card.style.transition = 'none';
-            
             longPressTimer = setTimeout(() => {
-                if (!isSwiping && isDragging) {
+                if (Math.abs(currentX) < 10 && isDragging) {
                     isDragging = false; if (navigator.vibrate) navigator.vibrate(50); openContextMenu(id);
                 }
             }, 500);
@@ -395,20 +389,8 @@
         function handleMove(e, id) {
             if (!isDragging) return;
             let deltaX = getClientX(e) - startX; let deltaY = getClientY(e) - startY;
-            
             if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) clearTimeout(longPressTimer);
-            
-            // Tách biệt Vuốt ngang và Cuộn dọc
-            if (!isSwiping) {
-                if (Math.abs(deltaX) > Math.abs(deltaY) + 5) {
-                    isSwiping = true; // Là vuốt ngang
-                } else if (Math.abs(deltaY) > 10) {
-                    isDragging = false; // Là cuộn dọc, hủy vuốt
-                    return;
-                }
-            }
-
-            if (isSwiping) {
+            if (Math.abs(deltaX) > Math.abs(deltaY) + 5) {
                 currentX = deltaX;
                 document.getElementById(`card-${id}`).style.transform = `translateX(${currentX}px)`;
                 if (currentX > 0) {
@@ -426,21 +408,15 @@
             isDragging = false; clearTimeout(longPressTimer);
             let card = document.getElementById(`card-${id}`);
 
-            if (!isSwiping) {
-                // CHẠM (TAP) BÌNH THƯỜNG
+            if (Math.abs(currentX) < 10) {
                 card.style.transform = `translateX(0px)`;
                 if (!e.target.closest('button') && !e.target.closest('input')) toggleCheckbox(id);
-                return;
-            }
-
-            // KẾT THÚC VUỐT (SWIPE)
-            card.style.transition = 'transform 0.25s ease';
-            if (currentX > 80) { 
+            } else if (currentX > 80) { 
                 card.style.transform = `translateX(150%)`; setTimeout(() => changeStatus(id, 'vali'), 200);
             } else if (currentX < -80) { 
                 card.style.transform = `translateX(-150%)`; setTimeout(() => changeStatus(id, 'dangmua'), 200);
             } else { 
-                card.style.transform = `translateX(0px)`;
+                card.style.transition = 'transform 0.2s'; card.style.transform = `translateX(0px)`;
                 document.getElementById(`bg-left-${id}`).style.opacity = 0; document.getElementById(`bg-right-${id}`).style.opacity = 0;
             }
             currentX = 0;
@@ -456,6 +432,7 @@
         function closeContextMenu() { document.getElementById('longPressContent').classList.add('translate-y-full'); setTimeout(() => document.getElementById('longPressMenu').classList.add('hidden'), 200); }
         function changeStatus(id, newStatus) { let item = items.find(i => i.id === id); if(item) { item.status = newStatus; item.checked = false; saveToStorage(); renderItems(); } }
 
+        // --- RENDER ---
         function renderItems() {
             let searchText = document.getElementById('searchInput').value.toLowerCase().trim();
             const listEl = document.getElementById('itemList'); listEl.innerHTML = '';
@@ -464,14 +441,11 @@
             if(searchText) filteredItems = filteredItems.filter(i => i.name.toLowerCase().includes(searchText));
             if(currentFilterTag) filteredItems = filteredItems.filter(i => i.category === currentFilterTag);
 
-            if (currentTab !== 'kho') filteredItems.sort((a, b) => (a.category || "").localeCompare(b.category || ""));
+            if (currentTab !== 'kho') filteredItems.sort((a, b) => a.category.localeCompare(b.category));
 
             document.getElementById('badge-kho').innerText = items.filter(i => i.status === 'kho').length;
             document.getElementById('badge-dangmua').innerText = items.filter(i => i.status === 'dangmua').length;
             document.getElementById('badge-vali').innerText = items.filter(i => i.status === 'vali').length;
-
-            let totalPrice = filteredItems.reduce((sum, item) => sum + (Number(item.price) * item.qty), 0);
-            document.getElementById('totalPriceDisplay').innerText = `${formatMoney(totalPrice)} đ`;
 
             let checkedCount = filteredItems.filter(i => i.checked).length;
             document.getElementById('selectedCount').innerText = checkedCount;
@@ -509,7 +483,7 @@
                             
                             <i class="fa-solid ${bgIcon} bg-icon"></i>
                             
-                            <div class="flex flex-col items-center justify-between shrink-0 pt-1 pb-1 w-[24px] z-10 relative pointer-events-none">
+                            <div class="flex flex-col items-center justify-between shrink-0 pt-1 pb-1 w-[24px] z-10 relative">
                                 <input type="checkbox" class="custom-checkbox" ${item.checked ? 'checked' : ''}>
                                 <span class="text-blue-600 font-black text-[14px] mt-4">#${index + 1}</span>
                             </div>
@@ -535,6 +509,7 @@
                     </div>
                 `;
             });
+            updateSidebarTags();
         }
 
         function openAddModal() { editingId = null; document.getElementById('modalTitle').innerText = "Thêm đồ mới"; document.getElementById('itemName').value = ''; document.getElementById('itemQty').value = '1'; document.getElementById('itemPrice').value = ''; document.getElementById('addModal').classList.remove('hidden'); }
@@ -544,8 +519,11 @@
         function saveItem() {
             let name = document.getElementById('itemName').value.trim(); let qty = document.getElementById('itemQty').value || 1; let priceStr = document.getElementById('itemPrice').value.replace(/,/g, ''); let price = priceStr ? Number(priceStr) : 0;
             if(!name) return; 
+
+            // Kiểm tra trùng tên
             let isDuplicate = items.some(i => i.name.toLowerCase() === name.toLowerCase() && i.id !== editingId);
             if(isDuplicate) { showToast("⚠️ Món đồ này đã tồn tại trong danh sách!"); return; }
+
             let autoData = autoCategorize(name);
             if (editingId) { let itemIndex = items.findIndex(i => i.id === editingId); if(itemIndex > -1) { items[itemIndex].name = name; items[itemIndex].qty = Number(qty); items[itemIndex].price = price; items[itemIndex].category = autoData.category; items[itemIndex].aviation = autoData.aviation; items[itemIndex].note = autoData.note; items[itemIndex].warning = autoData.warning; } } 
             else { items.unshift({ id: Date.now(), name: name, qty: Number(qty), price: price, category: autoData.category, aviation: autoData.aviation, note: autoData.note, status: 'kho', warning: autoData.warning, checked: false }); }
@@ -555,59 +533,47 @@
         function updateSidebarTags() {
             const listEl = document.getElementById('sidebarTagList');
             const lazadaCats = ["Dành riêng cho bạn", "Thiết Bị Điện Tử", "Phụ Kiện Điện Tử", "Sức Khỏe & Làm Đẹp", "Siêu Thị Tạp Hóa", "Hàng Gia dụng & Đời sống", "Thời trang & Phụ kiện", "Thể Thao & Du Lịch"];
-            listEl.innerHTML = `<button onclick="filterByTag('')" class="text-left px-4 py-3 rounded-xl ${currentFilterTag === '' ? 'bg-blue-50 text-blue-600 font-bold' : 'bg-slate-50 text-slate-700 font-medium'} text-sm transition-colors">Hiển thị tất cả</button>`;
+            listEl.innerHTML = `<button onclick="filterByTag('')" class="text-left px-3 py-3 rounded-lg ${currentFilterTag === '' ? 'bg-blue-50 text-blue-600 font-bold' : 'bg-slate-50 text-slate-700 font-medium'} text-sm">Hiển thị tất cả</button>`;
             lazadaCats.forEach(tag => {
                 let activeClass = currentFilterTag === tag ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-600 hover:bg-slate-50';
-                listEl.innerHTML += `<button onclick="filterByTag('${tag}')" class="text-left px-4 py-3 rounded-xl text-sm font-medium ${activeClass} transition-colors">${tag}</button>`;
+                listEl.innerHTML += `<button onclick="filterByTag('${tag}')" class="text-left px-3 py-3 rounded-lg text-sm font-medium ${activeClass}">${tag}</button>`;
             });
         }
-        function filterByTag(tag) { currentFilterTag = tag; toggleSidebar(); renderItems(); }
+        function filterByTag(tag) { currentFilterTag = tag; renderItems(); }
         
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-        const sidebarContent = document.getElementById('sidebarContent');
+        const sidebar = document.getElementById('sidebar');
         function toggleSidebar() {
-            if (sidebarOverlay.classList.contains('hidden')) {
-                sidebarOverlay.classList.remove('hidden');
-                setTimeout(() => sidebarContent.classList.remove('-translate-x-full'), 10);
-            } else {
-                sidebarContent.classList.add('-translate-x-full');
-                setTimeout(() => sidebarOverlay.classList.add('hidden'), 300);
-            }
+            if(sidebar.classList.contains('w-0')) sidebar.classList.replace('w-0', 'w-[260px]');
+            else sidebar.classList.replace('w-[260px]', 'w-0');
         }
 
         function getExportData() {
             let filteredItems = items.filter(i => i.status === currentTab);
             if(currentFilterTag) filteredItems = filteredItems.filter(i => i.category === currentFilterTag);
-            if(currentTab !== 'kho') filteredItems.sort((a, b) => (a.category || "").localeCompare(b.category || ""));
+            if(currentTab !== 'kho') filteredItems.sort((a, b) => a.category.localeCompare(b.category));
             return filteredItems;
         }
 
         function exportCopy() {
-            try {
-                let data = getExportData(); if(data.length === 0) return showToast("Không có dữ liệu!");
-                let text = data.map((i, idx) => `${idx + 1}. ${i.name} x${i.qty}`).join('\n');
-                navigator.clipboard.writeText(text).then(() => showToast("Đã copy thành công!")).catch(() => showToast("Trình duyệt chặn Copy"));
-            } catch(e) { showToast("Lỗi Export: " + e.message); }
+            let data = getExportData(); if(data.length === 0) return showToast("Không có dữ liệu!");
+            let text = data.map((i, idx) => `${idx + 1}. ${i.name} x${i.qty}`).join('\n');
+            navigator.clipboard.writeText(text).then(() => showToast("Đã copy thành công!"));
         }
         function exportDoc() {
-            try {
-                let data = getExportData(); if(data.length === 0) return showToast("Không có dữ liệu!");
-                let html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'></head><body><h3>Danh sách hành lý</h3><ul>";
-                data.forEach((i, idx) => html += `<li style="list-style-type: none;">${idx + 1}. ${i.name} x${i.qty}</li>`);
-                html += "</ul></body></html>";
-                let blob = new Blob(['\ufeff', html], { type: 'application/msword' });
-                let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Packify_HanhLy.doc"; link.click();
-            } catch(e) { showToast("Lỗi xuất file!"); }
+            let data = getExportData(); if(data.length === 0) return showToast("Không có dữ liệu!");
+            let html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'></head><body><h3>Danh sách hành lý</h3><ul>";
+            data.forEach((i, idx) => html += `<li style="list-style-type: none;">${idx + 1}. ${i.name} x${i.qty}</li>`);
+            html += "</ul></body></html>";
+            let blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+            let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Packify_HanhLy.doc"; link.click();
         }
         function exportCSV() {
-            try {
-                let data = getExportData(); if(data.length === 0) return showToast("Không có dữ liệu!");
-                let csv = '\uFEFFSTT,Tên,Số lượng,Giá tiền,Danh mục,Tag Hàng Không\n';
-                data.forEach((i, idx) => csv += `${idx + 1},"${i.name}",${i.qty},${i.price},"${i.category}","${i.aviation}"\n`);
-                let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Packify_HanhLy.csv"; link.click();
-            } catch(e) { showToast("Lỗi xuất file!"); }
+            let data = getExportData(); if(data.length === 0) return showToast("Không có dữ liệu!");
+            let csv = '\uFEFFSTT,Tên,Số lượng,Giá tiền,Danh mục,Tag Hàng Không\n';
+            data.forEach((i, idx) => csv += `${idx + 1},"${i.name}",${i.qty},${i.price},"${i.category}","${i.aviation}"\n`);
+            let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Packify_HanhLy.csv"; link.click();
         }
     </script>
 </body>
-</html>
+    </html>
