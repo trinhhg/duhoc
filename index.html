@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Packify Pro v10</title>
+    <title>Packify Pro v11</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -14,30 +14,27 @@
         }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         
-        /* Chỉnh lại thẻ và nền swipe */
+        /* Cấu trúc mới cho Swipe Animation */
         .card-wrapper { position: relative; border-radius: 16px; margin-bottom: 12px; }
-        .swipe-bg { 
-            position: absolute; inset: 0; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
-            padding: 0 20px; color: white; font-size: 24px; z-index: 0;
-        }
-        .swipe-bg-left { background-color: #10b981; opacity: 0; transition: opacity 0.2s; border-radius: 16px 0 0 16px; width: 50%; display: flex; align-items: center; justify-content: flex-start; }
-        .swipe-bg-right { background-color: #f97316; opacity: 0; transition: opacity 0.2s; border-radius: 0 16px 16px 0; width: 50%; display: flex; align-items: center; justify-content: flex-end; position: absolute; right: 0; top: 0; bottom: 0; }
+        .swipe-bg { position: absolute; inset: 0; border-radius: 16px; display: flex; overflow: hidden; z-index: 0; }
+        .swipe-bg-left { width: 50%; background-color: #10b981; display: flex; align-items: center; padding-left: 20px; color: white; font-size: 24px; opacity: 0; transition: opacity 0.2s; }
+        .swipe-bg-right { width: 50%; background-color: #f97316; display: flex; align-items: center; justify-content: flex-end; padding-right: 20px; color: white; font-size: 24px; opacity: 0; transition: opacity 0.2s; }
         
         .tg-card { 
             background-color: var(--tg-card); border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            position: relative; overflow: hidden; touch-action: pan-y; transition: transform 0.2s, opacity 0.2s, background-color 0.3s;
-            z-index: 10; width: 100%; cursor: grab;
+            position: relative; overflow: hidden; touch-action: pan-y; transition: transform 0.2s, background-color 0.3s;
+            z-index: 10; cursor: grab;
         }
         .tg-card:active { cursor: grabbing; }
-        .tg-card.swiping-left { transform: translateX(-60px); opacity: 0.9; }
-        .tg-card.swiping-right { transform: translateX(60px); opacity: 0.9; }
         .tg-card.vali-checked { background-color: #f8fafc; border: 2px dashed #cbd5e1; opacity: 0.7; filter: grayscale(50%); }
 
-        .bg-icon { position: absolute; right: -10px; bottom: -15px; font-size: 80px; color: #cbd5e1; opacity: 0.15; z-index: 0; pointer-events: none; }
+        /* Icon chìm Thumbnail */
+        .bg-icon { position: absolute; right: -5px; bottom: -10px; font-size: 75px; color: #cbd5e1; opacity: 0.25; z-index: 1; pointer-events: none; }
 
         .custom-checkbox {
             appearance: none; width: 22px; height: 22px; min-width: 22px;
             border: 2px solid #cbd5e1; border-radius: 6px; outline: none; cursor: pointer; position: relative; transition: 0.2s;
+            pointer-events: none; /* Để click cả thẻ kích hoạt */
         }
         .custom-checkbox:checked { background-color: var(--tg-blue); border-color: var(--tg-blue); }
         .custom-checkbox:checked::after {
@@ -55,7 +52,8 @@
     <div id="toast">Thông báo</div>
 
     <aside id="sidebar" class="w-0 flex-shrink-0 bg-white border-r border-slate-200 transition-[width] duration-300 ease-in-out overflow-hidden z-20">
-        <div class="w-[260px] h-full flex flex-col"> <div class="p-4 border-b border-slate-100 flex items-center gap-2">
+        <div class="w-[260px] h-full flex flex-col">
+            <div class="p-4 border-b border-slate-100 flex items-center gap-2">
                 <i class="fa-solid fa-tags text-blue-500 text-xl"></i><h2 class="text-lg font-bold text-slate-800">Danh Mục</h2>
             </div>
             <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-2" id="sidebarTagList"></div>
@@ -71,7 +69,7 @@
                 </button>
                 <div class="flex-1 relative">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" id="searchInput" placeholder="Tìm kiếm nhanh..." 
+                    <input type="text" id="searchInput" placeholder="Tìm kiếm nhanh..." oninput="renderItems()"
                            class="w-full bg-slate-100 text-slate-700 rounded-full py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-blue-300">
                 </div>
                 <div class="w-8 h-8 flex items-center justify-center" id="syncHeaderStatus">
@@ -92,7 +90,7 @@
 
         <div class="bg-white border-b border-slate-200 px-4 py-2 flex justify-between items-center text-sm z-10 shadow-sm" id="batchBar">
             <div class="flex items-center gap-2" onclick="toggleSelectAll()">
-                <input type="checkbox" id="selectAllCheckbox" class="custom-checkbox h-5 w-5 !rounded">
+                <input type="checkbox" id="selectAllCheckbox" class="custom-checkbox h-5 w-5 !rounded" style="pointer-events: auto;">
                 <span class="font-semibold text-slate-700">Chọn tất cả (<span id="selectedCount">0</span>)</span>
             </div>
             <div id="batchActions" class="hidden gap-2">
@@ -120,8 +118,7 @@
                 <h3 class="text-xs font-bold text-blue-500 uppercase tracking-wide mb-3 relative z-10"><i class="fa-solid fa-bolt mr-1"></i> Auto-Sync Realtime</h3>
                 <p class="text-[11px] text-slate-500 mb-3 relative z-10">Dữ liệu đồng bộ tự động giữa các thiết bị.</p>
                 <input type="password" id="syncPassInput" placeholder="Nhập mã bí mật..." oninput="handleSyncInput(event)" class="w-full bg-slate-100 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3 relative z-10 font-bold">
-                
-                <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border border-slate-100 relative z-10">
                     <span class="text-xs font-bold text-slate-600">Lần cuối: <span class="text-slate-500 font-normal" id="lastSyncTime">Chưa đồng bộ</span></span>
                     <span class="text-xs font-bold text-blue-600 flex items-center gap-1" id="syncStatusText"><i class="fa-solid fa-circle-pause text-slate-400"></i> Dừng</span>
                 </div>
@@ -238,10 +235,8 @@
         function adjustQty(change) { let el = document.getElementById('itemQty'); let newVal = parseInt(el.value) + change; if (newVal >= 1) el.value = newVal; }
         function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
         
-        // Fomat Ngày tháng đẹp
         function formatDateTime() {
-            let d = new Date();
-            return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')} - ${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
+            let d = new Date(); return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')} - ${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
         }
 
         // --- SYNC LOGIC ---
@@ -256,7 +251,6 @@
         async function pushToCloud() {
             let pass = localStorage.getItem('sync_pass'); if(!pass) return;
             let currentString = JSON.stringify(items); if(currentString === lastPushedString) return;
-            
             document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-500"></i> Đang lưu...`;
             document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud-arrow-up text-blue-500 animate-pulse";
             try {
@@ -264,10 +258,7 @@
                 lastPushedString = currentString;
                 document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-cloud-check text-emerald-500"></i> Đã đồng bộ`;
                 document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud-check text-emerald-500";
-                
-                let timeStr = formatDateTime();
-                localStorage.setItem('last_sync_time', timeStr);
-                document.getElementById('lastSyncTime').innerText = timeStr;
+                let timeStr = formatDateTime(); localStorage.setItem('last_sync_time', timeStr); document.getElementById('lastSyncTime').innerText = timeStr;
             } catch(e) {
                 document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Lỗi mạng`;
                 document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud-xmark text-red-500";
@@ -283,7 +274,7 @@
                     let cloudString = JSON.stringify(cloudItems);
                     if(cloudString !== JSON.stringify(items) && cloudString !== lastPushedString) {
                         items = cloudItems; localStorage.setItem('packify_data', cloudString); lastPushedString = cloudString;
-                        renderItems(document.getElementById('searchInput').value); updateProgress();
+                        renderItems(); updateProgress();
                     }
                     document.getElementById('syncStatusText').innerHTML = `<i class="fa-solid fa-cloud-check text-emerald-500"></i> Đã đồng bộ`;
                     document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud-check text-emerald-500";
@@ -333,7 +324,7 @@
                 
                 document.getElementById('selectAllCheckbox').checked = false;
                 items.forEach(i => i.checked = false); 
-                renderItems(document.getElementById('searchInput').value);
+                renderItems();
             }
         }
 
@@ -349,54 +340,71 @@
         function toggleCheckbox(id) { 
             let item = items.find(i => i.id === id); 
             if (item) { item.checked = !item.checked; saveToStorage(); } 
-            renderItems(document.getElementById('searchInput').value); 
+            renderItems(); 
         }
-        function toggleSelectAll() { let isChecked = document.getElementById('selectAllCheckbox').checked; items.filter(i => i.status === currentTab).forEach(i => i.checked = isChecked); renderItems(document.getElementById('searchInput').value); }
+        function toggleSelectAll() { let isChecked = document.getElementById('selectAllCheckbox').checked; items.filter(i => i.status === currentTab).forEach(i => i.checked = isChecked); renderItems(); }
         function batchAction(action) {
             let selected = items.filter(i => i.status === currentTab && i.checked); if (selected.length === 0) return;
             if(action === 'delete') items = items.filter(i => !(i.status === currentTab && i.checked));
             else selected.forEach(i => { i.status = action; i.checked = false; });
-            document.getElementById('selectAllCheckbox').checked = false; saveToStorage(); renderItems(document.getElementById('searchInput').value);
+            document.getElementById('selectAllCheckbox').checked = false; saveToStorage(); renderItems();
         }
 
-        // --- SWIPE LOGIC (Hỗ trợ cả Mouse và Touch) ---
-        let tX = 0, tY = 0, longPressTimer, isSwiping = false, isMouseDown = false;
+        // --- SWIPE LOGIC CỰC MƯỢT (HỖ TRỢ CHUỘT + CẢM ỨNG) ---
+        let startX = 0, startY = 0, currentX = 0, isDragging = false, longPressTimer;
         
         function getClientX(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
         function getClientY(e) { return e.touches ? e.touches[0].clientY : e.clientY; }
 
-        function handleTouchStart(e, id) {
-            tX = getClientX(e); tY = getClientY(e); isSwiping = false; isMouseDown = true;
+        function handleStart(e, id) {
+            startX = getClientX(e); startY = getClientY(e); isDragging = true; currentX = 0;
             let card = document.getElementById(`card-${id}`); card.style.transition = 'none';
-            longPressTimer = setTimeout(() => { if(!isSwiping && isMouseDown) { if (navigator.vibrate) navigator.vibrate(50); openContextMenu(id); } }, 500);
+            longPressTimer = setTimeout(() => {
+                if (Math.abs(currentX) < 10 && isDragging) {
+                    isDragging = false; if (navigator.vibrate) navigator.vibrate(50); openContextMenu(id);
+                }
+            }, 500);
         }
-        function handleTouchMove(e, id) {
-            if(!isMouseDown) return;
-            let deltaX = getClientX(e) - tX; let deltaY = getClientY(e) - tY;
-            if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) { isSwiping = true; clearTimeout(longPressTimer); }
+        
+        function handleMove(e, id) {
+            if (!isDragging) return;
+            let deltaX = getClientX(e) - startX; let deltaY = getClientY(e) - startY;
+            if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) clearTimeout(longPressTimer);
+
+            // Ưu tiên vuốt ngang
             if (Math.abs(deltaX) > Math.abs(deltaY) + 5) {
-                document.getElementById(`card-${id}`).style.transform = `translateX(${deltaX * 0.6}px)`;
-                // Hiện Animation nền
-                if (deltaX > 20) {
-                    document.getElementById(`bg-left-${id}`).style.opacity = Math.min(deltaX / 100, 1);
+                currentX = deltaX;
+                document.getElementById(`card-${id}`).style.transform = `translateX(${currentX}px)`;
+                
+                // Animation background
+                if (currentX > 0) {
+                    document.getElementById(`bg-left-${id}`).style.opacity = Math.min(currentX / 100, 1);
                     document.getElementById(`bg-right-${id}`).style.opacity = 0;
-                } else if (deltaX < -20) {
-                    document.getElementById(`bg-right-${id}`).style.opacity = Math.min(Math.abs(deltaX) / 100, 1);
+                } else {
+                    document.getElementById(`bg-right-${id}`).style.opacity = Math.min(Math.abs(currentX) / 100, 1);
                     document.getElementById(`bg-left-${id}`).style.opacity = 0;
                 }
             }
         }
-        function handleTouchEnd(e, id) {
-            if(!isMouseDown) return; isMouseDown = false; clearTimeout(longPressTimer); 
-            let endX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
-            let deltaX = endX - tX;
+        
+        function handleEnd(e, id) {
+            if (!isDragging) return;
+            isDragging = false; clearTimeout(longPressTimer);
             let card = document.getElementById(`card-${id}`);
-            card.style.transition = 'transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)'; card.style.transform = `translateX(0px)`;
-            document.getElementById(`bg-left-${id}`).style.opacity = 0; document.getElementById(`bg-right-${id}`).style.opacity = 0;
 
-            if (!isSwiping) return;
-            if (deltaX > 80) { card.classList.add('swiping-right'); setTimeout(() => { changeStatus(id, 'vali'); }, 150); }
-            else if (deltaX < -80) { card.classList.add('swiping-left'); setTimeout(() => { changeStatus(id, 'dangmua'); }, 150); }
+            if (Math.abs(currentX) < 10) {
+                // Click (loại trừ nếu bấm trúng nút)
+                card.style.transform = `translateX(0px)`;
+                if (!e.target.closest('button') && !e.target.closest('input')) toggleCheckbox(id);
+            } else if (currentX > 80) { // Vuốt phải
+                card.style.transform = `translateX(150%)`; setTimeout(() => changeStatus(id, 'vali'), 200);
+            } else if (currentX < -80) { // Vuốt trái
+                card.style.transform = `translateX(-150%)`; setTimeout(() => changeStatus(id, 'dangmua'), 200);
+            } else { // Vuốt chưa đủ lực -> Nhả về
+                card.style.transition = 'transform 0.2s'; card.style.transform = `translateX(0px)`;
+                document.getElementById(`bg-left-${id}`).style.opacity = 0; document.getElementById(`bg-right-${id}`).style.opacity = 0;
+            }
+            currentX = 0;
         }
 
         function openContextMenu(id) {
@@ -404,17 +412,25 @@
             document.getElementById('longPressMenu').classList.remove('hidden');
             setTimeout(() => document.getElementById('longPressContent').classList.remove('translate-y-full'), 10);
             document.getElementById('ctxEditBtn').onclick = () => { closeContextMenu(); openEditModal(id); };
-            document.getElementById('ctxDeleteBtn').onclick = () => { items = items.filter(i => i.id !== id); saveToStorage(); renderItems(document.getElementById('searchInput').value); closeContextMenu(); };
+            document.getElementById('ctxDeleteBtn').onclick = () => { items = items.filter(i => i.id !== id); saveToStorage(); renderItems(); closeContextMenu(); };
         }
         function closeContextMenu() { document.getElementById('longPressContent').classList.add('translate-y-full'); setTimeout(() => document.getElementById('longPressMenu').classList.add('hidden'), 200); }
-        function changeStatus(id, newStatus) { let item = items.find(i => i.id === id); if(item) { item.status = newStatus; item.checked = false; saveToStorage(); renderItems(document.getElementById('searchInput').value); } }
+        function changeStatus(id, newStatus) { let item = items.find(i => i.id === id); if(item) { item.status = newStatus; item.checked = false; saveToStorage(); renderItems(); } }
 
         // --- RENDER ---
-        function renderItems(searchText = "") {
+        function renderItems() {
+            // Lấy value search trực tiếp ở đây để tránh lỗi mất search khi đang click
+            let searchText = document.getElementById('searchInput').value.toLowerCase().trim();
             const listEl = document.getElementById('itemList'); listEl.innerHTML = '';
+            
             let filteredItems = items.filter(i => i.status === currentTab);
-            if(searchText) filteredItems = filteredItems.filter(i => i.name.toLowerCase().includes(searchText.toLowerCase()));
+            if(searchText) filteredItems = filteredItems.filter(i => i.name.toLowerCase().includes(searchText));
             if(currentFilterTag) filteredItems = filteredItems.filter(i => i.category === currentFilterTag);
+
+            // Gom nhóm thông minh cho Tab Đang mua và Vali
+            if (currentTab !== 'kho') {
+                filteredItems.sort((a, b) => a.category.localeCompare(b.category));
+            }
 
             document.getElementById('badge-kho').innerText = items.filter(i => i.status === 'kho').length;
             document.getElementById('badge-dangmua').innerText = items.filter(i => i.status === 'dangmua').length;
@@ -429,7 +445,7 @@
 
             filteredItems.forEach((item, index) => {
                 let isValiChecked = (item.checked && currentTab === 'vali');
-                let cardClass = isValiChecked ? "tg-card vali-checked p-4 flex gap-4" : "tg-card p-4 flex gap-4";
+                let cardClass = isValiChecked ? "tg-card vali-checked p-4 flex gap-4 z-10" : "tg-card p-4 flex gap-4 z-10";
                 let textClass = isValiChecked ? 'line-through-custom text-slate-500' : 'text-slate-800';
                 
                 let warningHtml = item.warning ? `<div class="mt-2 text-[11px] text-red-600 bg-red-50 p-2 rounded-lg font-medium leading-snug"><i class="fa-solid fa-triangle-exclamation mr-1"></i>${item.warning}</div>` : '';
@@ -453,19 +469,18 @@
                             <div class="swipe-bg-left" id="bg-left-${item.id}"><i class="fa-solid fa-suitcase"></i></div>
                             <div class="swipe-bg-right" id="bg-right-${item.id}"><i class="fa-solid fa-cart-shopping"></i></div>
                         </div>
-
                         <div class="${cardClass}" id="card-${item.id}"
-                             onmousedown="handleTouchStart(event, ${item.id})" onmousemove="handleTouchMove(event, ${item.id})" onmouseup="handleTouchEnd(event, ${item.id})" onmouseleave="handleTouchEnd(event, ${item.id})"
-                             ontouchstart="handleTouchStart(event, ${item.id})" ontouchmove="handleTouchMove(event, ${item.id})" ontouchend="handleTouchEnd(event, ${item.id})">
+                             onmousedown="handleStart(event, ${item.id})" onmousemove="handleMove(event, ${item.id})" onmouseup="handleEnd(event, ${item.id})" onmouseleave="handleEnd(event, ${item.id})"
+                             ontouchstart="handleStart(event, ${item.id})" ontouchmove="handleMove(event, ${item.id})" ontouchend="handleEnd(event, ${item.id})">
                             
                             <i class="fa-solid ${bgIcon} bg-icon"></i>
                             
-                            <div class="flex flex-col items-center justify-between shrink-0 pt-1 pb-1 w-[24px] z-10">
-                                <input type="checkbox" class="custom-checkbox" onchange="toggleCheckbox(${item.id})" ${item.checked ? 'checked' : ''}>
+                            <div class="flex flex-col items-center justify-between shrink-0 pt-1 pb-1 w-[24px] z-10 relative">
+                                <input type="checkbox" class="custom-checkbox" ${item.checked ? 'checked' : ''}>
                                 <span class="text-blue-600 font-black text-[14px] mt-4">#${index + 1}</span>
                             </div>
                             
-                            <div class="flex-1 min-w-0 z-10">
+                            <div class="flex-1 min-w-0 z-10 relative pointer-events-none">
                                 <div class="flex items-start gap-1.5">
                                     <h3 class="font-bold text-[16px] leading-tight ${textClass} break-words">${item.name}</h3>
                                     <span class="text-[11px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold shrink-0 mt-0.5">x${item.qty}</span>
@@ -498,9 +513,10 @@
             if(!name) return; let autoData = autoCategorize(name);
             if (editingId) { let itemIndex = items.findIndex(i => i.id === editingId); if(itemIndex > -1) { items[itemIndex].name = name; items[itemIndex].qty = Number(qty); items[itemIndex].price = price; items[itemIndex].category = autoData.category; items[itemIndex].aviation = autoData.aviation; items[itemIndex].note = autoData.note; items[itemIndex].warning = autoData.warning; } } 
             else { items.unshift({ id: Date.now(), name: name, qty: Number(qty), price: price, category: autoData.category, aviation: autoData.aviation, note: autoData.note, status: 'kho', warning: autoData.warning, checked: false }); }
-            saveToStorage(); closeModal(); renderItems(document.getElementById('searchInput').value);
+            saveToStorage(); closeModal(); renderItems();
         }
 
+        // --- PUSH SIDEBAR LOGIC ---
         function updateSidebarTags() {
             const listEl = document.getElementById('sidebarTagList');
             const lazadaCats = ["Dành riêng cho bạn", "Thiết Bị Điện Tử", "Phụ Kiện Điện Tử", "Sức Khỏe & Làm Đẹp", "Siêu Thị Tạp Hóa", "Hàng Gia dụng & Đời sống", "Thời trang & Phụ kiện", "Thể Thao & Du Lịch"];
@@ -510,33 +526,39 @@
                 listEl.innerHTML += `<button onclick="filterByTag('${tag}')" class="text-left px-3 py-3 rounded-lg text-sm font-medium ${activeClass}">${tag}</button>`;
             });
         }
-        function filterByTag(tag) { currentFilterTag = tag; toggleSidebar(); renderItems(document.getElementById('searchInput').value); }
-
+        function filterByTag(tag) { currentFilterTag = tag; renderItems(); } // Không toggle sidebar ở đây nữa
+        
         const sidebar = document.getElementById('sidebar');
         function toggleSidebar() {
             if(sidebar.classList.contains('w-0')) sidebar.classList.replace('w-0', 'w-[260px]');
             else sidebar.classList.replace('w-[260px]', 'w-0');
         }
-        document.getElementById('searchInput').addEventListener('input', (e) => renderItems(e.target.value));
 
-        // --- EXPORT ---
+        // --- EXPORT LẤY DS HIỆN TẠI (CÓ STT) ---
+        function getExportData() {
+            let filteredItems = items.filter(i => i.status === currentTab);
+            if(currentFilterTag) filteredItems = filteredItems.filter(i => i.category === currentFilterTag);
+            if(currentTab !== 'kho') filteredItems.sort((a, b) => a.category.localeCompare(b.category));
+            return filteredItems;
+        }
+
         function exportCopy() {
-            if(items.length === 0) return showToast("Không có dữ liệu!");
-            let text = items.map(i => `${i.name} x${i.qty}`).join('\n');
+            let data = getExportData(); if(data.length === 0) return showToast("Không có dữ liệu!");
+            let text = data.map((i, idx) => `${idx + 1}. ${i.name} x${i.qty}`).join('\n');
             navigator.clipboard.writeText(text).then(() => showToast("Đã copy thành công!"));
         }
         function exportDoc() {
-            if(items.length === 0) return showToast("Không có dữ liệu!");
+            let data = getExportData(); if(data.length === 0) return showToast("Không có dữ liệu!");
             let html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'></head><body><h3>Danh sách hành lý</h3><ul>";
-            items.forEach(i => html += `<li>${i.name} x${i.qty}</li>`);
+            data.forEach((i, idx) => html += `<li style="list-style-type: none;">${idx + 1}. ${i.name} x${i.qty}</li>`);
             html += "</ul></body></html>";
             let blob = new Blob(['\ufeff', html], { type: 'application/msword' });
             let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Packify_HanhLy.doc"; link.click();
         }
         function exportCSV() {
-            if(items.length === 0) return showToast("Không có dữ liệu!");
-            let csv = '\uFEFFTên,Số lượng,Giá tiền,Danh mục,Tag Hàng Không\n';
-            items.forEach(i => csv += `"${i.name}",${i.qty},${i.price},"${i.category}","${i.aviation}"\n`);
+            let data = getExportData(); if(data.length === 0) return showToast("Không có dữ liệu!");
+            let csv = '\uFEFFSTT,Tên,Số lượng,Giá tiền,Danh mục,Tag Hàng Không\n';
+            data.forEach((i, idx) => csv += `${idx + 1},"${i.name}",${i.qty},${i.price},"${i.category}","${i.aviation}"\n`);
             let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Packify_HanhLy.csv"; link.click();
         }
