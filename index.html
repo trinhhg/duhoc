@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Packify Pro v15</title>
+    <title>Packify Pro v16</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -22,8 +22,8 @@
         .tg-card { 
             background-color: var(--tg-card); border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             position: relative; overflow: hidden; z-index: 10; cursor: pointer;
-            border: 2px solid transparent; /* Chuẩn bị cho viền xanh khi chọn */
-            transition: transform 0s, border-color 0.15s, background-color 0.2s; /* Bỏ transition transform để vuốt mượt */
+            border: 2px solid transparent; 
+            transition: transform 0.2s, border-color 0.15s, background-color 0.2s; 
         }
         
         /* Hiệu ứng khi thẻ được CHỌN (TICK) */
@@ -40,7 +40,7 @@
         input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 600; display: none; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); text-align: center; }
         
-        /* Checkbox chọn tất cả vẫn giữ */
+        /* Checkbox chọn tất cả */
         .custom-checkbox { appearance: none; width: 20px; height: 20px; border: 2px solid #cbd5e1; border-radius: 4px; outline: none; cursor: pointer; position: relative; }
         .custom-checkbox:checked { background-color: var(--tg-blue); border-color: var(--tg-blue); }
         .custom-checkbox:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: white; font-size: 11px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
@@ -281,7 +281,7 @@
                     let cloudString = JSON.stringify(cloudItems);
                     if(cloudString !== JSON.stringify(items) && cloudString !== lastPushedString) {
                         items = cloudItems; localStorage.setItem('packify_data', cloudString); lastPushedString = cloudString;
-                        renderItems(true); // render nhưng giữ nguyên trạng thái UI
+                        renderItems(); updateProgress();
                     }
                     document.getElementById('syncStatusIcon').className = "fa-solid fa-cloud-check text-emerald-500";
                 }
@@ -312,7 +312,7 @@
             renderItems();
         };
 
-        // --- TAB ---
+        // --- TAB & BATCH ---
         function switchTab(tab) {
             if(tab !== 'settings') lastActiveTab = tab;
             currentTab = tab; currentFilterTag = ''; 
@@ -335,13 +335,11 @@
                 let pb = document.getElementById('priceBar');
                 if (tab === 'dangmua' || tab === 'vali') pb.classList.remove('hidden'); else pb.classList.add('hidden');
                 
-                // Clear selection khi chuyển tab
                 items.forEach(i => i.checked = false); 
                 renderItems();
             }
         }
 
-        // --- UPDATE BATCH & UI ---
         function updateProgress() {
             let total = items.length; let inVali = items.filter(i => i.status === 'vali').length;
             let percent = total === 0 ? 0 : Math.round((inVali / total) * 100);
@@ -351,21 +349,7 @@
             else document.getElementById('progressBar').classList.replace('bg-emerald-500', 'bg-blue-500');
         }
 
-        // Hàm thay đổi trạng thái UI của 1 thẻ (Không render lại toàn trang)
-        function toggleCardSelection(id) {
-            let item = items.find(i => i.id === id);
-            if (!item) return;
-            item.checked = !item.checked;
-            
-            let card = document.getElementById(`card-${id}`);
-            if (item.checked) card.classList.add('is-selected');
-            else card.classList.remove('is-selected');
-
-            updateBatchUI();
-            saveToStorage();
-        }
-
-        // Cập nhật thanh Hành động (Mua/Cất/Xóa) mượt mà
+        // Cập nhật thanh Hành động khi có thẻ được chọn
         function updateBatchUI() {
             let checkedCount = items.filter(i => i.status === currentTab && i.checked).length;
             let batchBar = document.getElementById('batchBar');
@@ -373,10 +357,36 @@
             if (checkedCount > 0 && currentTab !== 'settings') {
                 batchBar.style.display = 'flex';
                 document.getElementById('selectedCount').innerText = checkedCount;
-                // Có thể bỏ qua checkbox input, hoặc tự tick nó
+                document.getElementById('selectAllCheckbox').checked = checkedCount === items.filter(i => i.status === currentTab).length;
             } else {
                 batchBar.style.display = 'none';
+                document.getElementById('selectAllCheckbox').checked = false;
             }
+        }
+
+        // Chọn/Bỏ chọn một thẻ
+        function toggleCardSelection(id) {
+            let item = items.find(i => i.id === id);
+            if (!item) return;
+            item.checked = !item.checked;
+            
+            let card = document.getElementById(`card-${id}`);
+            if (item.checked) {
+                card.classList.add('is-selected');
+                card.querySelector('.text-slate-800, .line-through-custom').classList.add('text-blue-700');
+            } else {
+                card.classList.remove('is-selected');
+                let textEl = card.querySelector('.font-bold.text-\\[16px\\]');
+                textEl.classList.remove('text-blue-700');
+                if (currentTab === 'vali') {
+                    textEl.classList.add('line-through-custom', 'text-slate-500');
+                } else {
+                    textEl.classList.add('text-slate-800');
+                }
+            }
+
+            updateBatchUI();
+            saveToStorage();
         }
 
         function toggleSelectAll() { 
@@ -384,6 +394,7 @@
             items.filter(i => i.status === currentTab).forEach(i => i.checked = isChecked); 
             renderItems(); // Bắt buộc render lại nếu chọn tất cả
         }
+
         function batchAction(action) {
             let selected = items.filter(i => i.status === currentTab && i.checked); if (selected.length === 0) return;
             if(action === 'delete') items = items.filter(i => !(i.status === currentTab && i.checked));
@@ -392,7 +403,7 @@
             saveToStorage(); renderItems();
         }
 
-        // --- SWIPE LOGIC (CỰC KỲ TỐI ƯU CHO MOBILE) ---
+        // --- SWIPE LOGIC ---
         let startX = 0, startY = 0, currentX = 0, isDragging = false, isSwiping = false, longPressTimer;
         
         function getClientX(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
@@ -403,7 +414,7 @@
             startX = getClientX(e); startY = getClientY(e); 
             isDragging = true; isSwiping = false; currentX = 0;
             let card = document.getElementById(`card-${id}`); 
-            card.style.transition = 'none'; // Tắt transition để đi theo ngón tay
+            card.style.transition = 'none'; 
             
             longPressTimer = setTimeout(() => {
                 if (!isSwiping && isDragging) {
@@ -419,8 +430,8 @@
             if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) clearTimeout(longPressTimer);
             
             if (!isSwiping) {
-                if (Math.abs(deltaX) > Math.abs(deltaY) + 5) isSwiping = true; // Là vuốt ngang
-                else if (Math.abs(deltaY) > 10) { isDragging = false; return; } // Là cuộn dọc
+                if (Math.abs(deltaX) > Math.abs(deltaY) + 5) isSwiping = true; 
+                else if (Math.abs(deltaY) > 10) { isDragging = false; return; } 
             }
 
             if (isSwiping) {
@@ -443,7 +454,6 @@
             let card = document.getElementById(`card-${id}`);
 
             if (!isSwiping) {
-                // ĐÂY LÀ CHẠM (TAP) - Đã bỏ checkbox
                 card.style.transform = `translateX(0px)`;
                 if (!e.target.closest('button')) toggleCardSelection(id);
                 return;
@@ -472,9 +482,9 @@
         function changeStatus(id, newStatus) { let item = items.find(i => i.id === id); if(item) { item.status = newStatus; item.checked = false; saveToStorage(); renderItems(); } }
 
         // --- RENDER ---
-        function renderItems(isSilent = false) {
+        function renderItems() {
             let searchText = document.getElementById('searchInput').value.toLowerCase().trim();
-            const listEl = document.getElementById('itemList');
+            const listEl = document.getElementById('itemList'); 
             
             let filteredItems = items.filter(i => i.status === currentTab);
             if(searchText) filteredItems = filteredItems.filter(i => i.name.toLowerCase().includes(searchText));
@@ -488,20 +498,18 @@
             let totalPrice = filteredItems.reduce((sum, item) => sum + (Number(item.price) * item.qty), 0);
             document.getElementById('totalPriceDisplay').innerText = `${formatMoney(totalPrice)} đ`;
 
-            updateBatchUI(); // Cập nhật thanh Mua/Cất thay vì render lại toàn trang nếu chỉ ấn tick
+            updateBatchUI(); 
             
-            // Build HTML
             let htmlContent = '';
             filteredItems.forEach((item, index) => {
                 let isVali = currentTab === 'vali';
                 
-                // Class cơ bản
                 let cardClasses = ['tg-card', 'p-4', 'flex', 'gap-4'];
                 if (isVali) cardClasses.push('vali-stored');
                 if (item.checked) cardClasses.push('is-selected');
 
                 let textClass = (isVali && !item.checked) ? 'line-through-custom text-slate-500' : 'text-slate-800';
-                if (item.checked) textClass = 'text-blue-700'; // Đổi màu text khi tick
+                if (item.checked) textClass = 'text-blue-700'; 
 
                 let warningHtml = item.warning ? `<div class="mt-2 text-[11px] text-red-600 bg-red-50 p-2 rounded-lg font-medium leading-snug"><i class="fa-solid fa-triangle-exclamation mr-1"></i>${item.warning}</div>` : '';
                 let aviaColor = "bg-slate-100 text-slate-600";
@@ -556,7 +564,7 @@
                 `;
             });
             listEl.innerHTML = htmlContent;
-            if(!isSilent) updateSidebarTags(); // Chỉ update sidebar nếu không phải là Silent Render (VD tick)
+            updateSidebarTags(); 
         }
 
         function openAddModal() { editingId = null; document.getElementById('modalTitle').innerText = "Thêm đồ mới"; document.getElementById('itemName').value = ''; document.getElementById('itemQty').value = '1'; document.getElementById('itemPrice').value = ''; document.getElementById('addModal').classList.remove('hidden'); }
@@ -584,7 +592,12 @@
                 listEl.innerHTML += `<button onclick="filterByTag('${tag}')" class="text-left px-3 py-3 rounded-lg text-sm font-medium ${activeClass}">${tag}</button>`;
             });
         }
-        function filterByTag(tag) { currentFilterTag = tag; toggleSidebar(); renderItems(); }
+        
+        function filterByTag(tag) { 
+            currentFilterTag = tag; 
+            renderItems(); 
+            toggleSidebar(); // Tự động đóng sidebar sau khi chọn
+        }
         
         const sidebarOverlay = document.getElementById('sidebarOverlay');
         const sidebarContent = document.getElementById('sidebarContent');
